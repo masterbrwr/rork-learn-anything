@@ -99,11 +99,18 @@ object Ai {
                 putJsonObject("gateway") { putJsonArray("models") { FALLBACKS.forEach { add(it) } } }
             }
         }
+        val backend = Config.EXPO_PUBLIC_SUPABASE_URL.trimEnd('/')
+        val anonKey = Config.EXPO_PUBLIC_SUPABASE_ANON_KEY
+        if (backend.isBlank() || anonKey.isBlank()) {
+            throw AiException("AI setup is not connected yet. The app needs its secure backend configuration.", retryable = false)
+        }
+
         var lastError: Exception? = null
         repeat(2) { attempt ->
             try {
-                val res = client.post("${Config.EXPO_PUBLIC_TOOLKIT_URL}/v2/vercel/v1/chat/completions") {
-                    header("Authorization", "Bearer ${Config.EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY}")
+                val res = client.post("$backend/functions/v1/ai-chat") {
+                    header("apikey", anonKey)
+                    header("Authorization", "Bearer $anonKey")
                     contentType(ContentType.Application.Json)
                     setBody(body.toString())
                 }
