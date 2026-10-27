@@ -45,6 +45,7 @@ fun GoalIntakeScreen(nav: NavController, initialGoal: String) {
     var minutes by rememberSaveable { mutableIntStateOf(s.profile.dailyGoalMinutes.takeIf { it in TIMES } ?: 20) }
     var style by rememberSaveable { mutableStateOf(s.profile.learningStyle.takeIf { it in STYLES } ?: "Examples") }
     var phase by remember { mutableStateOf("form") } // form | loading | error | preview
+    var errorDetail by remember { mutableStateOf<String?>(null) }
     var draft by remember { mutableStateOf<CourseDraft?>(null) }
     val known = remember { mutableStateListOf<String>() }
 
@@ -52,12 +53,31 @@ fun GoalIntakeScreen(nav: NavController, initialGoal: String) {
     val atLimit = !s.isPremium && userPaths >= AppStore.FREE_PATHS
 
     fun build() {
+        if (goal.isBlank()) return
+        errorDetail = null
         phase = "loading"
         AppStore.track("path_requested", mapOf("goal" to goal))
         scope.launch {
             runCatching { Ai.generateCourse(goal.trim(), level, deadline, minutes, style, AppStore.learnerContext()) }
-                .onSuccess { d -> if (d.modules.isEmpty()) { phase = "error" } else { draft = d; known.clear(); phase = "preview" } }
-                .onFailure { AppStore.logError("generateCourse", it); phase = "error" }
+                .onSuccess { d ->
+                    if (d.modules.isEmpty() || d.modules.all { it.lessons.isEmpty() }) {
+                        errorDetail = "The AI service returned an empty course. Please try again."
+                        phase = "error"
+                    } else {
+                        draft = d
+                        known.clear()
+                        phase = "preview"
+                    }
+                }
+                .onFailure { e ->
+                    AppStore.logError("generateCourse", e)
+                    errorDetail = when {
+                        e.message.orEmpty().contains("setup", true) || e.message.orEmpty().contains("configuration", true) || e.message.orEmpty().contains("backend", true) ->
+                            "The AI service is not connected yet. The app's Supabase URL and public key are blank in its configuration, so course generation cannot start until the owner connects the backend."
+                        else -> e.message ?: "Check your internet connection and try again."
+                    }
+                    phase = "error"
+                }
         }
     }
 
@@ -94,7 +114,7 @@ fun GoalIntakeScreen(nav: NavController, initialGoal: String) {
                     GeneratingState(listOf("Mapping what you need to know…", "Checking prerequisites…", "Sequencing lessons for you…", "Sizing it to your deadline…"))
                 }
                 "error" -> ErrorState(
-                    message = "I couldn't build that path just now. Your answers are kept.",
+                    message = errorDetail ?: "I couldn't build that path just now. Your answers are kept.",
                     onRetry = { build() }, onBack = { phase = "form" }, onHome = { nav.goHome() },
                 )
                 "preview" -> draft?.let { d -> PathPreview(d, goal, known, onStart = { start() }, onRegenerate = { build() }) }
