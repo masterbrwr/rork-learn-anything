@@ -64,6 +64,7 @@ fun TutorScreen(nav: NavController) {
     var input by rememberSaveable { mutableStateOf("") }
     var thinking by remember { mutableStateOf(false) }
     var failed by remember { mutableStateOf<String?>(null) }
+    var failureReason by remember { mutableStateOf<String?>(null) }
     var menu by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
     val remaining = AppStore.tutorRemaining(s)
@@ -84,22 +85,23 @@ fun TutorScreen(nav: NavController) {
     fun send(text: String) {
         val t = text.trim()
         if (t.isEmpty() || thinking) return
-        if (AppStore.tutorRemaining() <= 0) { failed = null; return }
+        if (AppStore.tutorRemaining() <= 0) { failed = null; failureReason = null; return }
         input = ""
         failed = null
+        failureReason = null
         val msg = ChatMessage(newId(), "user", t)
         AppStore.update { it.copy(chat = (it.chat + msg).takeLast(200)) }
-        AppStore.consumeTutor()
         AppStore.track("tutor_message", mapOf("mode" to mode))
         thinking = true
         scope.launch {
             runCatching { Ai.tutor(AppStore.state.value.chat, mode, AppStore.learnerContext()) }
                 .onSuccess { r ->
+                    AppStore.consumeTutor()
                     val reply = ChatMessage(newId(), "assistant", r.text.ifBlank { "Let's try that again. Could you rephrase?" }, r.visual, r.chips)
                     AppStore.update { it.copy(chat = (it.chat + reply).takeLast(200)) }
                     if (AppStore.state.value.tutorVoice) tts?.speak(r.text.replace("**", ""), TextToSpeech.QUEUE_FLUSH, null, reply.id)
                 }
-                .onFailure { AppStore.logError("tutor", it); failed = t }
+                .onFailure { AppStore.logError("tutor", it); failed = t; failureReason = it.message ?: "Check your connection and try again." }
             thinking = false
         }
     }
@@ -168,12 +170,16 @@ fun TutorScreen(nav: NavController) {
             }
             if (failed != null) item("failed") {
                 LACard(Modifier.fillMaxWidth(), color = c.coralSoft, borderColor = c.coral.copy(alpha = 0.25f)) {
-                    Text("Something didn't load.", style = MaterialTheme.typography.titleMedium, color = c.ink)
-                    Text("Your message is saved. Check your connection and retry.", style = MaterialTheme.typography.bodyMedium, color = c.inkSoft)
+                    Text("Your tutor couldn't answer yet", style = MaterialTheme.typography.titleMedium, color = c.ink)
+                    Text(failureReason ?: "Check your connection and try again.", style = MaterialTheme.typography.bodyMedium, color = c.inkSoft)
+                    if (failureReason.orEmpty().contains("configuration", ignoreCase = true) || failureReason.orEmpty().contains("backend", ignoreCase = true) || failureReason.orEmpty().contains("setup", ignoreCase = true)) {
+                        Spacer(Modifier.height(4.dp))
+                        Text("The AI service still needs to be connected by the app owner. Your message won't count against your daily limit.", style = MaterialTheme.typography.bodySmall, color = c.inkSoft)
+                    }
                     Spacer(Modifier.height(10.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         PrimaryButton("Retry", { retry() }, icon = Icons.Rounded.Refresh)
-                        TextButton(onClick = { failed = null }) { Text("Dismiss", color = c.inkSoft) }
+                        TextButton(onClick = { failed = null; failureReason = null }) { Text("Dismiss", color = c.inkSoft) }
                     }
                 }
             }
