@@ -148,7 +148,9 @@ object Ai {
         var last: Exception? = null
         repeat(2) {
             try {
-                val raw = complete("$system\nRespond with ONLY a single valid JSON object. No markdown, no commentary.", listOf("user" to user), maxTokens, 0.5)
+                val language = AppStore.state.value.profile.language.ifBlank { "English" }
+                val localizedSystem = "$system\nLANGUAGE RULE: Teach and respond entirely in the learner's preferred language: $language. Translate lesson titles, explanations, examples, questions, answer choices, feedback, memory tricks, visual labels/captions, and course content into that language. Keep technical product names, formulas, code, units, and official terminology unchanged when translating them would reduce accuracy. Do not switch back to English unless the learner asks.\nRespond with ONLY a single valid JSON object. No markdown, no commentary."
+                val raw = complete(localizedSystem, listOf("user" to user), maxTokens, 0.5)
                 return json.decodeFromString(serializer, extractJson(raw))
             } catch (e: AiException) {
                 if (!e.retryable) throw e

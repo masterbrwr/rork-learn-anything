@@ -8,6 +8,8 @@ data class LearnerProfile(
     val interests: List<String> = emptyList(),
     val dailyGoalMinutes: Int = 20,
     val learningStyle: String = "Examples",
+    /** Preferred language for lessons, tutor replies, quizzes, visuals, and course generation. */
+    val language: String = "English",
     val onboarded: Boolean = false,
     val createdAt: Long = System.currentTimeMillis(),
 )

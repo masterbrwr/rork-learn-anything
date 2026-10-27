@@ -40,6 +40,10 @@ private val LEVELS = listOf("Complete beginner", "I know the basics", "Intermedi
 private val DEADLINES = listOf("Tomorrow", "This week", "This month", "No rush")
 private val TIMES = listOf(10, 20, 30, 60)
 private val STYLES = listOf("Visual", "Examples", "Practice", "Theory")
+private val LANGUAGES = listOf(
+    "English", "Spanish", "French", "German", "Portuguese", "Italian", "Chinese",
+    "Japanese", "Korean", "Arabic", "Hindi", "Russian", "Dutch", "Turkish"
+)
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -52,6 +56,7 @@ fun GoalIntakeScreen(nav: NavController, initialGoal: String) {
     var deadline by rememberSaveable { mutableStateOf(DEADLINES[2]) }
     var minutes by rememberSaveable { mutableIntStateOf(s.profile.dailyGoalMinutes.takeIf { it in TIMES } ?: 20) }
     var style by rememberSaveable { mutableStateOf(s.profile.learningStyle.takeIf { it in STYLES } ?: "Examples") }
+    var language by rememberSaveable { mutableStateOf(s.profile.language.takeIf { it in LANGUAGES } ?: "English") }
     var phase by remember { mutableStateOf("form") } // form | loading | error | preview
     var errorDetail by remember { mutableStateOf<String?>(null) }
     var showPreferences by rememberSaveable { mutableStateOf(false) }
@@ -111,7 +116,7 @@ fun GoalIntakeScreen(nav: NavController, initialGoal: String) {
             },
         )
         AppStore.saveCourse(course)
-        AppStore.update { st -> st.copy(profile = st.profile.copy(learningStyle = style, dailyGoalMinutes = minutes)) }
+        AppStore.update { st -> st.copy(profile = st.profile.copy(learningStyle = style, dailyGoalMinutes = minutes, language = language)) }
         AppStore.track("path_created", mapOf("title" to course.title, "lessons" to course.total.toString()))
         nav.navigate(Routes.PATHS) { popUpTo(Routes.HOME); launchSingleTop = true }
     }
@@ -187,6 +192,7 @@ fun GoalIntakeScreen(nav: NavController, initialGoal: String) {
                                 ChipQuestion("Your timeline", DEADLINES, deadline) { deadline = it }
                                 ChipQuestion("Daily learning time", TIMES.map { "$it min" }, "$minutes min") { minutes = it.removeSuffix(" min").toInt() }
                                 ChipQuestion("How you prefer to learn", STYLES, style) { style = it }
+                                ChipQuestion("Learning language", LANGUAGES, language) { language = it }
                             }
                         }
                         Spacer(Modifier.height(16.dp))
