@@ -1,6 +1,11 @@
 package com.rork.learnanything.ui.screens
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -46,6 +51,7 @@ fun GoalIntakeScreen(nav: NavController, initialGoal: String) {
     var style by rememberSaveable { mutableStateOf(s.profile.learningStyle.takeIf { it in STYLES } ?: "Examples") }
     var phase by remember { mutableStateOf("form") } // form | loading | error | preview
     var errorDetail by remember { mutableStateOf<String?>(null) }
+    var showPreferences by rememberSaveable { mutableStateOf(false) }
     var draft by remember { mutableStateOf<CourseDraft?>(null) }
     val known = remember { mutableStateListOf<String>() }
 
@@ -120,12 +126,24 @@ fun GoalIntakeScreen(nav: NavController, initialGoal: String) {
                 "preview" -> draft?.let { d -> PathPreview(d, goal, known, onStart = { start() }, onRegenerate = { build() }) }
                 else -> Column(Modifier.fillMaxSize()) {
                     Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp)) {
-                        Text("What do you want to learn?", style = MaterialTheme.typography.headlineMedium, color = c.ink)
-                        Spacer(Modifier.height(12.dp))
+                        Spacer(Modifier.height(8.dp))
+                        Text("Your next skill starts here.", style = MaterialTheme.typography.headlineMedium, color = c.ink)
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            "Tell us what you want to learn. We'll build a step-by-step path that starts with the basics and grows with you.",
+                            style = MaterialTheme.typography.bodyLarge, color = c.inkSoft,
+                        )
+                        Spacer(Modifier.height(18.dp))
                         OutlinedTextField(
-                            value = goal, onValueChange = { goal = it }, modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text("e.g. pass my calculus exam, learn Python for automation") },
-                            shape = RoundedCornerShape(16.dp), minLines = 2,
+                            value = goal, onValueChange = { goal = it.take(160) }, modifier = Modifier.fillMaxWidth(),
+                            placeholder = { Text("e.g. understand car engines, learn algebra") },
+                            label = { Text("I want to learn…") },
+                            shape = RoundedCornerShape(18.dp), minLines = 2, maxLines = 3,
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            "We'll teach the fundamentals first, show worked examples, and add memory tricks when they help.",
+                            style = MaterialTheme.typography.bodyMedium, color = c.inkSoft,
                         )
                         if (atLimit) {
                             Spacer(Modifier.height(14.dp))
@@ -138,10 +156,36 @@ fun GoalIntakeScreen(nav: NavController, initialGoal: String) {
                                 TextButton(onClick = { nav.navigate(Routes.PRICING) }) { Text("See Premium", color = c.coral) }
                             }
                         }
-                        ChipQuestion("Where are you starting?", LEVELS, level) { level = it }
-                        ChipQuestion("When do you need it?", DEADLINES, deadline) { deadline = it }
-                        ChipQuestion("Time per day", TIMES.map { "$it min" }, "$minutes min") { minutes = it.removeSuffix(" min").toInt() }
-                        ChipQuestion("How do you learn best?", STYLES, style) { style = it }
+                        Spacer(Modifier.height(18.dp))
+                        LACard(Modifier.fillMaxWidth(), onClick = { showPreferences = !showPreferences }) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    Modifier.size(42.dp).clip(RoundedCornerShape(14.dp)).background(c.cobaltSoft),
+                                    contentAlignment = Alignment.Center,
+                                ) { Icon(Icons.Rounded.Tune, null, tint = c.cobalt) }
+                                Spacer(Modifier.width(12.dp))
+                                Column(Modifier.weight(1f)) {
+                                    Text("Personalize your path", style = MaterialTheme.typography.titleMedium, color = c.ink)
+                                    Text(
+                                        if (showPreferences) "Adjust your level, pace and learning style" else "Optional · choose your pace and starting level",
+                                        style = MaterialTheme.typography.bodySmall, color = c.inkSoft,
+                                    )
+                                }
+                                Icon(
+                                    if (showPreferences) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore,
+                                    contentDescription = if (showPreferences) "Hide preferences" else "Show preferences",
+                                    tint = c.inkSoft,
+                                )
+                            }
+                        }
+                        AnimatedVisibility(showPreferences, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
+                            Column {
+                                ChipQuestion("Your starting level", LEVELS, level) { level = it }
+                                ChipQuestion("Your timeline", DEADLINES, deadline) { deadline = it }
+                                ChipQuestion("Daily learning time", TIMES.map { "$it min" }, "$minutes min") { minutes = it.removeSuffix(" min").toInt() }
+                                ChipQuestion("How you prefer to learn", STYLES, style) { style = it }
+                            }
+                        }
                         Spacer(Modifier.height(16.dp))
                     }
                     Box(Modifier.navigationBarsPadding().imePadding().padding(horizontal = 20.dp, vertical = 12.dp)) {
