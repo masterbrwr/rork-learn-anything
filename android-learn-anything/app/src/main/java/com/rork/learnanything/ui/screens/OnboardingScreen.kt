@@ -73,10 +73,9 @@ fun OnboardingScreen(nav: NavController) {
 
     Column(Modifier.fillMaxSize().background(c.canvas).systemBarsPadding().imePadding()) {
         Row(Modifier.padding(horizontal = 8.dp, vertical = 8.dp).height(48.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (step > 0) IconButton(onClick = { step-- }) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = c.ink) }
-            else Spacer(Modifier.width(48.dp))
+            Spacer(Modifier.width(48.dp))
             Row(Modifier.weight(1f).padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                repeat(3) { i -> Box(Modifier.weight(1f).height(4.dp).clip(CircleShape).background(if (i <= step) c.coral else c.border)) }
+                Box(Modifier.weight(1f).height(4.dp).clip(CircleShape).background(c.coral))
             }
             Spacer(Modifier.width(48.dp))
         }
@@ -92,13 +91,13 @@ fun OnboardingScreen(nav: NavController) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Icon(Icons.Rounded.AutoAwesome, null, tint = c.amber, modifier = Modifier.size(42.dp))
                                 Spacer(Modifier.height(8.dp))
-                                Text("A learning path built around you", color = c.onHero, style = MaterialTheme.typography.titleLarge)
+                                Text("Learn anything. One step at a time.", color = c.onHero, style = MaterialTheme.typography.titleLarge)
                             }
                         }
                         Spacer(Modifier.height(24.dp))
                         Text("What do you want to learn?", style = MaterialTheme.typography.headlineLarge, color = c.ink)
                         Spacer(Modifier.height(8.dp))
-                        Text("Start with one goal. Learn Anything will turn it into a practical path with short lessons, examples and quizzes.", style = MaterialTheme.typography.bodyLarge, color = c.inkSoft)
+                        Text("Start with one goal. We’ll teach the fundamentals first, then build toward real skills with clear explanations and guided practice. No long setup questionnaire.", style = MaterialTheme.typography.bodyLarge, color = c.inkSoft)
                         Spacer(Modifier.height(18.dp))
                         OutlinedTextField(
                             value = goal,
@@ -183,17 +182,17 @@ fun OnboardingScreen(nav: NavController) {
 
         Column(Modifier.padding(24.dp)) {
             PrimaryButton(
-                when (step) { 0 -> "Build my learning path"; 1 -> "Continue"; else -> "Create my free account" },
-                {
-                    if (step < 2) step++ else finish()
-                },
+                "Build my learning path",
+                { finish() },
                 Modifier.fillMaxWidth(),
-                enabled = step != 0 || goal.isNotBlank() || picked.isNotEmpty(),
+                enabled = goal.isNotBlank() || picked.isNotEmpty(),
             )
-            if (step == 2) {
-                Spacer(Modifier.height(8.dp))
-                Text("Next: save your progress with a free account", style = MaterialTheme.typography.bodySmall, color = c.inkSoft, modifier = Modifier.fillMaxWidth())
-            }
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "Next: create a free account to save your progress. You can personalize your learning preferences later.",
+                style = MaterialTheme.typography.bodySmall, color = c.inkSoft,
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
 }
