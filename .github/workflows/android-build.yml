@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -17,6 +17,65 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply multilingual learning support
+        shell: python
+        run: |
+          from pathlib import Path
+          root = Path('android-learn-anything/app/src/main/java/com/rork/learnanything')
+
+          models = root / 'data/Models.kt'
+          text = models.read_text()
+          old = '    val learningStyle: String = "Examples",\n    val onboarded: Boolean = false,'
+          new = '    val learningStyle: String = "Examples",\n    /** Preferred language for lessons, tutor replies, quizzes, visuals, and course generation. */\n    val language: String = "English",\n    val onboarded: Boolean = false,'
+          if old in text and 'val language: String = "English"' not in text:
+              models.write_text(text.replace(old, new, 1))
+
+          ai = root / 'data/Ai.kt'
+          text = ai.read_text()
+          old = '                val raw = complete("$system\\nRespond with ONLY a single valid JSON object. No markdown, no commentary.", listOf("user" to user), maxTokens, 0.5)'
+          new = '                val language = AppStore.state.value.profile.language.ifBlank { "English" }\n                val localizedSystem = "$system\\nLANGUAGE RULE: Teach and respond entirely in the learner\'s preferred language: $language. Translate lesson titles, explanations, examples, questions, answer choices, feedback, memory tricks, visual labels/captions, and course content into that language. Keep technical product names, formulas, code, units, and official terminology unchanged when translating them would reduce accuracy. Do not switch back to English unless the learner asks.\\nRespond with ONLY a single valid JSON object. No markdown, no commentary."\n                val raw = complete(localizedSystem, listOf("user" to user), maxTokens, 0.5)'
+          if old in text and 'LANGUAGE RULE: Teach and respond entirely' not in text:
+              ai.write_text(text.replace(old, new, 1))
+
+          intake = root / 'ui/screens/GoalIntakeScreen.kt'
+          text = intake.read_text()
+          if 'private val LANGUAGES = listOf(' not in text:
+              text = text.replace(
+                  'private val STYLES = listOf("Visual", "Examples", "Practice", "Theory")',
+                  'private val STYLES = listOf("Visual", "Examples", "Practice", "Theory")\nprivate val LANGUAGES = listOf(\n    "English", "Spanish", "French", "German", "Portuguese", "Italian", "Chinese",\n    "Japanese", "Korean", "Arabic", "Hindi", "Russian", "Dutch", "Turkish"\n)'
+              )
+              text = text.replace(
+                  '    var style by rememberSaveable { mutableStateOf(s.profile.learningStyle.takeIf { it in STYLES } ?: "Examples") }',
+                  '    var style by rememberSaveable { mutableStateOf(s.profile.learningStyle.takeIf { it in STYLES } ?: "Examples") }\n    var language by rememberSaveable { mutableStateOf(s.profile.language.takeIf { it in LANGUAGES } ?: "English") }'
+              )
+              text = text.replace(
+                  'AppStore.update { st -> st.copy(profile = st.profile.copy(learningStyle = style, dailyGoalMinutes = minutes)) }',
+                  'AppStore.update { st -> st.copy(profile = st.profile.copy(learningStyle = style, dailyGoalMinutes = minutes, language = language)) }'
+              )
+              text = text.replace(
+                  '                                ChipQuestion("How you prefer to learn", STYLES, style) { style = it }',
+                  '                                ChipQuestion("How you prefer to learn", STYLES, style) { style = it }\n                                ChipQuestion("Learning language", LANGUAGES, language) { language = it }'
+              )
+              intake.write_text(text)
+
+      - name: Commit multilingual changes
+        if: ${{ !contains(github.event.head_commit.message, '[multilingual-bot]') }}
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add android-learn-anything/app/src/main/java/com/rork/learnanything/data/Models.kt \
+                  android-learn-anything/app/src/main/java/com/rork/learnanything/data/Ai.kt \
+                  android-learn-anything/app/src/main/java/com/rork/learnanything/ui/screens/GoalIntakeScreen.kt
+          if git diff --cached --quiet; then
+            echo "Multilingual support already applied."
+          else
+            git commit -m "Add learner language selection and localized AI teaching [multilingual-bot]"
+            git push
+          fi
 
       - name: Set up Java 17
         uses: actions/setup-java@v4
