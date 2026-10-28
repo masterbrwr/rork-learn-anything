@@ -63,11 +63,11 @@ data class PatternReport(
 data class TutorReply(val text: String, val visual: Visual?, val chips: List<String>)
 
 /**
- * All AI goes through the Rork Toolkit proxy (Vercel AI Gateway). Primary model with gateway fallbacks.
+ * All AI goes through the Learn Anything Supabase Edge Function.
+ * The Edge Function calls Gemini server-side; the Android app never receives the Gemini key.
  */
 object Ai {
-    private const val PRIMARY = "anthropic/claude-haiku-5.5"
-    private val FALLBACKS = listOf("anthropic/claude-sonnet-5.5", "deepseek/deepseek-v4.1-flash")
+    private const val PRIMARY = "gemini-3.8-flash"
 
     private val json = Json { ignoreUnknownKeys = true; isLenient = true; coerceInputValues = true; explicitNulls = false }
 
@@ -95,9 +95,6 @@ object Ai {
                 addJsonObject { put("role", "system"); put("content", system) }
                 messages.forEach { (role, text) -> addJsonObject { put("role", role); put("content", text) } }
             }
-            putJsonObject("providerOptions") {
-                putJsonObject("gateway") { putJsonArray("models") { FALLBACKS.forEach { add(it) } } }
-            }
         }
         val backend = Config.EXPO_PUBLIC_SUPABASE_URL.trimEnd('/')
         val anonKey = Config.EXPO_PUBLIC_SUPABASE_ANON_KEY
@@ -105,18 +102,29 @@ object Ai {
             throw AiException("AI setup is not connected yet. The app needs its secure backend configuration.", retryable = false)
         }
 
+        // The Edge Function has JWT verification enabled, so use the signed-in user's
+        // current Supabase access token instead of the public anon key as Authorization.
+        val accessToken = try {
+            Auth.validToken()
+        } catch (e: AuthException) {
+            throw AiException("Please sign in before using the AI tutor.", retryable = false)
+        }
+
         var lastError: Exception? = null
         repeat(2) { attempt ->
             try {
                 val res = client.post("$backend/functions/v1/ai-chat") {
                     header("apikey", anonKey)
-                    header("Authorization", "Bearer $anonKey")
+                    header("Authorization", "Bearer $accessToken")
                     contentType(ContentType.Application.Json)
                     setBody(body.toString())
                 }
                 val text = res.bodyAsText()
                 if (!res.status.isSuccess()) {
                     val code = res.status.value
+                    if (code == 401 || code == 403) {
+                        throw AiException("Your sign-in session is no longer valid. Please sign in again.", retryable = false)
+                    }
                     if (code == 429 || code >= 500) throw AiException("Service busy ($code)") else throw AiException("Request failed ($code)", retryable = false)
                 }
                 val content = json.parseToJsonElement(text).jsonObject["choices"]?.jsonArray?.firstOrNull()
