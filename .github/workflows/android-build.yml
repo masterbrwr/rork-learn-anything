@@ -77,6 +77,27 @@ jobs:
             git push
           fi
 
+      - name: Configure Supabase app settings
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        shell: bash
+        working-directory: android-learn-anything
+        run: |
+          set +x
+          test -n "$SUPABASE_URL" || (echo "Missing SUPABASE_URL repository secret" && exit 1)
+          test -n "$SUPABASE_ANON_KEY" || (echo "Missing SUPABASE_ANON_KEY repository secret" && exit 1)
+          cat > app/src/main/java/com/rork/learnanything/Config.kt <<EOF
+          package com.rork.learnanything
+
+          object Config {
+              const val EXPO_PUBLIC_SUPABASE_URL: String = "$SUPABASE_URL"
+              const val EXPO_PUBLIC_SUPABASE_ANON_KEY: String = "$SUPABASE_ANON_KEY"
+              const val EXPO_PUBLIC_REVENUECAT_TEST_API_KEY: String = ""
+              const val EXPO_PUBLIC_TOOLKIT_URL: String = ""
+          }
+          EOF
+
       - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
