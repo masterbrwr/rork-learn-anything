@@ -95,7 +95,7 @@ fun PricingScreen(nav: NavController) {
             if (pkgs.isEmpty()) OfferState.Error("No plans are available right now.")
             else {
                 if (selectedId == null || pkgs.none { it.identifier == selectedId }) {
-                    selectedId = (pkgs.firstOrNull { it.packageType == PackageType.ANNUAL } ?: pkgs.first()).identifier
+                    selectedId = (pkgs.firstOrNull { it.packageType == PackageType.MONTHLY } ?: pkgs.first()).identifier
                 }
                 OfferState.Ready(pkgs)
             }
