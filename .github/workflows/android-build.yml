@@ -77,11 +77,10 @@ jobs:
             git push
           fi
 
-      - name: Configure Supabase and optional RevenueCat app settings
+      - name: Configure Supabase app settings
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-          REVENUECAT_ANDROID_PUBLIC_KEY: ${{ secrets.REVENUECAT_ANDROID_PUBLIC_KEY }}
         shell: bash
         working-directory: android-learn-anything
         run: |
@@ -94,7 +93,6 @@ jobs:
           object Config {
               const val EXPO_PUBLIC_SUPABASE_URL: String = "$SUPABASE_URL"
               const val EXPO_PUBLIC_SUPABASE_ANON_KEY: String = "$SUPABASE_ANON_KEY"
-              const val EXPO_PUBLIC_REVENUECAT_TEST_API_KEY: String = "$REVENUECAT_ANDROID_PUBLIC_KEY"
               const val EXPO_PUBLIC_TOOLKIT_URL: String = ""
           }
           EOF
