@@ -96,7 +96,7 @@ object AppStore {
             val tmp = File(f.parentFile, f.name + ".tmp")
             tmp.writeText(json.encodeToString(AppState.serializer(), s))
             tmp.renameTo(f)
-        }.onFailure { Log.e("AppStore", "Failed to persist", it) }
+        }.onFailure { Log.e("AppStore", "Failed to persist state", it) }
     }
 
     fun update(block: (AppState) -> AppState) {
@@ -301,24 +301,21 @@ object AppStore {
 
     /** rating: 0 Again, 1 Hard, 2 Good, 3 Easy */
     fun rateCard(cardId: String, rating: Int) {
-        update { s ->
-            s.copy(cardReviews = s.cardReviews + 1, cards = s.cards.map { c ->
-                if (c.id != cardId) c else {
-                    val q = intArrayOf(1, 3, 4, 5)[rating.coerceIn(0, 3)]
-                    val ease = (c.ease + (0.1f - (5 - q) * (0.08f + (5 - q) * 0.02f))).coerceAtLeast(1.3f)
-                    if (rating == 0) {
-                        c.copy(ease = ease, reps = 0, lapses = c.lapses + 1, intervalDays = 0, dueDay = today())
-                    } else {
-                        val interval = when (c.reps) {
-                            0 -> if (rating == 1) 1 else if (rating == 3) 3 else 1
-                            1 -> if (rating == 3) 7 else if (rating == 1) 3 else 6
-                            else -> (c.intervalDays * ease * (if (rating == 1) 0.8f else if (rating == 3) 1.3f else 1f)).roundToInt().coerceAtLeast(1)
-                        }
-                        c.copy(ease = ease, reps = c.reps + 1, intervalDays = interval, dueDay = today() + interval)
+        update { s -> s.copy(cardReviews = s.cardReviews + 1, cards = s.cards.map { c ->
+            if (c.id != cardId) c else {
+                val q = intArrayOf(1, 3, 4, 5)[rating.coerceIn(0, 3)]
+                val ease = (c.ease + (0.1f - (5 - q) * (0.08f + (5 - q) * 0.02f))).coerceAtLeast(1.3f)
+                if (rating == 0) c.copy(ease = ease, reps = 0, lapses = c.lapses + 1, intervalDays = 0, dueDay = today())
+                else {
+                    val interval = when (c.reps) {
+                        0 -> if (rating == 1) 1 else if (rating == 3) 3 else 1
+                        1 -> if (rating == 3) 7 else if (rating == 1) 3 else 6
+                        else -> (c.intervalDays * ease * (if (rating == 1) 0.8f else if (rating == 3) 1.3f else 1f)).roundToInt().coerceAtLeast(1)
                     }
+                    c.copy(ease = ease, reps = c.reps + 1, intervalDays = interval, dueDay = today() + interval)
                 }
-            })
-        }
+            }
+        }) }
         recordActivity(xp = 2)
     }
 
@@ -333,8 +330,8 @@ object AppStore {
     fun deleteNote(id: String) = update { s -> s.copy(notes = s.notes.filter { it.id != id }) }
 
     // ---------- Tutor quota ----------
-    const val FREE_TUTOR_DAILY = 25
-    const val FREE_PATHS = 3
+    const val FREE_TUTOR_DAILY = 10
+    const val FREE_PATHS = 1
 
     fun tutorRemaining(s: AppState = state.value): Int {
         if (s.isPremium) return Int.MAX_VALUE
@@ -364,50 +361,16 @@ object AppStore {
             if (minutes >= 600) add("hours_10")
             if (s.courses.any { it.isComplete }) add("mastered")
             if (worlds >= 5) add("explorer")
-            if (s.strongQuizzes >= 5) add("quiz_master")
+            if (s.quizzesTaken >= 5 && s.quizBestScore >= 90) add("quiz_master")
             if (s.correctAnswers >= 50) add("problem_solver")
             if (s.cardReviews >= 100) add("card_shark")
             if (s.notes.size >= 5) add("note_taker")
-            if (s.sessionsCompleted >= 3) add("focused")
+            if (s.studySessions >= 3) add("focused")
         }
-        val fresh = earned.filter { it !in s.unlocked }
-        if (fresh.isNotEmpty()) {
-            _state.update { it.copy(unlocked = it.unlocked + fresh) }
-            _unlockQueue.update { q -> q + fresh.mapNotNull { id -> ACHIEVEMENTS.firstOrNull { it.id == id } } }
-            fresh.forEach { track("achievement_unlocked", mapOf("id" to it)) }
-        }
-    }
-
-    fun finishQuiz(correct: Int, total: Int, subject: String, mode: String) {
-        val pct = if (total == 0) 0f else correct.toFloat() / total
-        update { s ->
-            s.copy(
-                quizzesTaken = s.quizzesTaken + 1,
-                strongQuizzes = s.strongQuizzes + if (pct >= 0.9f) 1 else 0,
-            )
-        }
-        track("quiz_completed", mapOf("subject" to subject, "mode" to mode, "score" to "$correct/$total"))
-    }
-
-    /** Topics where the learner is weakest, used to personalize the home screen and tutor. */
-    fun weakTopics(s: AppState = state.value, limit: Int = 3): List<TopicStat> =
-        s.topicStats.filter { it.wrong > 0 && it.wrong >= it.correct * 0.5 }
-            .sortedWith(compareByDescending<TopicStat> { it.wrong - it.correct }.thenByDescending { it.lastSeen })
-            .take(limit)
-
-    fun learnerContext(s: AppState = state.value): String {
-        val weak = weakTopics(s).joinToString { it.topic }
-        val strong = s.topicStats.filter { it.correct >= 3 && it.wrong <= it.correct / 4 }.take(4).joinToString { it.topic }
-        val course = s.courses.firstOrNull { it.id == s.activeCourseId }
-        val recentMistakes = s.mistakes.filter { !it.resolved }.takeLast(4).joinToString("; ") { "${it.concept}: answered '${it.yourAnswer}' instead of '${it.correctAnswer}'" }
-        return buildString {
-            append("Learner: ${s.profile.name.ifBlank { "the learner" }}. ")
-            append("Preferred style: ${s.profile.learningStyle}. Daily time: ${s.profile.dailyGoalMinutes} min. ")
-            if (s.profile.interests.isNotEmpty()) append("Interests: ${s.profile.interests.joinToString()}. ")
-            if (course != null) append("Current path: ${course.title} (${(course.progress * 100).roundToInt()}% done, current lesson: ${course.currentLesson?.title ?: "complete"}, difficulty ${course.difficulty}/5). ")
-            if (weak.isNotBlank()) append("Weak areas: $weak. ")
-            if (strong.isNotBlank()) append("Strengths: $strong. ")
-            if (recentMistakes.isNotBlank()) append("Recent mistakes: $recentMistakes.")
+        val newly = earned.filter { id -> s.achievements.none { it.id == id } }.mapNotNull { id -> ACHIEVEMENTS.find { it.id == id } }
+        if (newly.isNotEmpty()) {
+            _unlockQueue.update { it + newly }
+            _state.update { st -> st.copy(achievements = st.achievements + newly.map { AchievementState(it.id, System.currentTimeMillis()) }) }
         }
     }
 }
