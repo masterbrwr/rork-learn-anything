@@ -59,7 +59,7 @@ data class LAColors(
     val isDark: Boolean,
 )
 
-// New visual direction: cool, crisp, premium, and technology-forward.
+// Modern visual direction: cool, crisp, premium, and technology-forward.
 private val Light = LAColors(
     canvas = Color(0xFFF5F7FB), surface = Color(0xFFFFFFFF), surfaceAlt = Color(0xFFEEF2F7), border = Color(0xFFDCE3EC),
     ink = Color(0xFF0B1220), inkSoft = Color(0xFF5B6577), inkFaint = Color(0xFF98A2B3),
@@ -118,11 +118,11 @@ val Tabular = TextStyle(fontFeatureSettings = "tnum")
 private fun typography(): Typography {
     val base = Typography()
     return base.copy(
-        displaySmall = TextStyle(fontFamily = Serif, fontWeight = FontWeight.SemiBold, fontSize = 34.sp, lineHeight = 40.sp, letterSpacing = (-0.5).sp),
-        headlineLarge = TextStyle(fontFamily = Serif, fontWeight = FontWeight.SemiBold, fontSize = 30.sp, lineHeight = 36.sp, letterSpacing = (-0.4).sp),
-        headlineMedium = TextStyle(fontFamily = Serif, fontWeight = FontWeight.SemiBold, fontSize = 26.sp, lineHeight = 32.sp, letterSpacing = (-0.3).sp),
-        headlineSmall = TextStyle(fontFamily = Serif, fontWeight = FontWeight.SemiBold, fontSize = 22.sp, lineHeight = 28.sp, letterSpacing = (-0.2).sp),
-        titleLarge = TextStyle(fontFamily = Serif, fontWeight = FontWeight.SemiBold, fontSize = 20.sp, lineHeight = 26.sp),
+        displaySmall = base.displaySmall.copy(fontWeight = FontWeight.Bold, fontSize = 34.sp, lineHeight = 40.sp, letterSpacing = (-0.8).sp),
+        headlineLarge = base.headlineLarge.copy(fontWeight = FontWeight.Bold, fontSize = 30.sp, lineHeight = 36.sp, letterSpacing = (-0.5).sp),
+        headlineMedium = base.headlineMedium.copy(fontWeight = FontWeight.Bold, fontSize = 26.sp, lineHeight = 32.sp, letterSpacing = (-0.4).sp),
+        headlineSmall = base.headlineSmall.copy(fontWeight = FontWeight.Bold, fontSize = 22.sp, lineHeight = 28.sp, letterSpacing = (-0.25).sp),
+        titleLarge = base.titleLarge.copy(fontWeight = FontWeight.Bold, fontSize = 20.sp, lineHeight = 26.sp),
         titleMedium = base.titleMedium.copy(fontWeight = FontWeight.SemiBold, fontSize = 16.sp),
         bodyLarge = base.bodyLarge.copy(fontSize = 16.sp, lineHeight = 24.sp),
         bodyMedium = base.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp),
