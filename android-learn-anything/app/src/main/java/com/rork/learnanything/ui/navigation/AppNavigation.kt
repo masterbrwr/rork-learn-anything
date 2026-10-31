@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.automirrored.rounded.MenuBook
+import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
@@ -24,6 +25,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -36,14 +38,15 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.rork.learnanything.data.AppStore
+import com.rork.learnanything.data.Auth
 import com.rork.learnanything.ui.components.SparkleMark
-import com.rork.learnanything.ui.components.PrimaryButton
 import com.rork.learnanything.ui.screens.*
 import com.rork.learnanything.ui.theme.LA
 import kotlinx.coroutines.delay
 
 private data class Tab(val route: String, val label: String, val icon: ImageVector, val selectedIcon: ImageVector?)
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppNavigation() {
     val nav = rememberNavController()
@@ -52,6 +55,18 @@ fun AppNavigation() {
     val entry by nav.currentBackStackEntryAsState()
     val route = entry?.destination?.route
     val showBar = route in Routes.TABS
+    val session by Auth.session.collectAsStateWithLifecycle()
+    val appState by AppStore.state.collectAsStateWithLifecycle()
+    var previousSessionId by remember { mutableStateOf(session?.user?.id) }
+    var showWelcomePremium by remember { mutableStateOf(false) }
+
+    LaunchedEffect(session?.user?.id, appState.isPremium) {
+        val currentId = session?.user?.id
+        if (currentId != null && previousSessionId == null && !appState.isPremium) {
+            showWelcomePremium = true
+        }
+        previousSessionId = currentId
+    }
 
     val tabs = listOf(
         Tab(Routes.HOME, "Home", Icons.Outlined.Home, Icons.Rounded.Home),
@@ -112,7 +127,19 @@ fun AppNavigation() {
                 composable(Routes.TUTOR) { TutorScreen(nav) }
                 composable(Routes.STUDY) { StudyScreen(nav) }
                 composable(Routes.PROFILE) { ProfileScreen(nav) }
-                composable(Routes.PRICING) { PricingScreen(nav) }
+                composable(
+                    "pricing?welcome={welcome}&reason={reason}",
+                    listOf(
+                        navArgument("welcome") { defaultValue = "false" },
+                        navArgument("reason") { defaultValue = "" },
+                    ),
+                ) {
+                    PricingScreen(
+                        nav,
+                        welcome = it.arguments?.getString("welcome") == "true",
+                        reason = it.arguments?.getString("reason").orEmpty(),
+                    )
+                }
                 composable(Routes.NOTES) { NotesScreen(nav) }
                 composable(Routes.MISTAKES) { MistakesScreen(nav) }
                 composable("intake?goal={goal}", listOf(navArgument("goal") { defaultValue = "" })) {
@@ -142,6 +169,35 @@ fun AppNavigation() {
             }
         }
         AchievementOverlay()
+
+        if (showWelcomePremium && !appState.isPremium) {
+            ModalBottomSheet(
+                onDismissRequest = { showWelcomePremium = false },
+                containerColor = c.canvas,
+            ) {
+                Column(
+                    Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 24.dp, vertical = 10.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Box(Modifier.size(58.dp).clip(CircleShape).background(c.coralSoft), contentAlignment = Alignment.Center) {
+                        Icon(Icons.Rounded.AutoAwesome, null, tint = c.coral, modifier = Modifier.size(30.dp))
+                    }
+                    Spacer(Modifier.height(14.dp))
+                    Text("Welcome to Learn Anything", style = MaterialTheme.typography.headlineSmall, color = c.ink, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                    Spacer(Modifier.height(6.dp))
+                    Text("Unlock unlimited learning with Premium — $6.99/month after a 7-day free trial.", style = MaterialTheme.typography.bodyLarge, color = c.inkSoft, textAlign = TextAlign.Center)
+                    Spacer(Modifier.height(18.dp))
+                    PrimaryButton("See Premium & start trial", {
+                        showWelcomePremium = false
+                        nav.navigate(Routes.pricing(welcome = true))
+                    }, Modifier.fillMaxWidth())
+                    TextButton(onClick = { showWelcomePremium = false }, modifier = Modifier.fillMaxWidth()) {
+                        Text("Continue with Free", color = c.inkSoft)
+                    }
+                    Spacer(Modifier.height(8.dp))
+                }
+            }
+        }
     }
 }
 
