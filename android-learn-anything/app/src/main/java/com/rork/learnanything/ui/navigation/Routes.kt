@@ -28,6 +28,8 @@ object Routes {
     fun review(deckId: String = "all") = "review/${e(deckId)}"
     fun note(id: String = "new") = "note/${e(id)}"
     fun exam(id: String = "") = "exam?id=${e(id)}"
+    /** Premium paywall. welcome=true is used immediately after sign-in; reason explains a limit hit. */
+    fun pricing(welcome: Boolean = false, reason: String = "") = "pricing?welcome=$welcome&reason=${e(reason)}"
     /** from: "onboarding" lets people skip; next: route to open after finishing onboarding. */
     fun auth(from: String = "", next: String = "") = "auth?from=$from&next=${e(next)}"
 }
