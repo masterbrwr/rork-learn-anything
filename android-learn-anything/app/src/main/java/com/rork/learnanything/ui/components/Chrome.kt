@@ -10,6 +10,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -18,7 +19,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.navigation.NavController
 import com.rork.learnanything.ui.theme.LA
 
-/** Detail-screen chrome: back arrow, serif title, no bottom bar. */
+/** Modern detail-screen chrome shared by lessons, quizzes, exams, notes and other focused views. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailScaffold(
@@ -33,12 +34,38 @@ fun DetailScaffold(
         modifier = modifier,
         containerColor = LA.colors.canvas,
         topBar = {
-            TopAppBar(
-                title = { Text(title, style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back") } },
-                actions = actions,
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = LA.colors.canvas, scrolledContainerColor = LA.colors.canvas, titleContentColor = LA.colors.ink),
-            )
+            Surface(
+                color = LA.colors.surface,
+                tonalElevation = 2.dp,
+                shadowElevation = 1.dp,
+            ) {
+                Column {
+                    TopAppBar(
+                        title = {
+                            Text(
+                                title,
+                                style = MaterialTheme.typography.titleLarge,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        },
+                        navigationIcon = {
+                            IconButton(onClick = onBack) {
+                                Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back")
+                            }
+                        },
+                        actions = actions,
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = LA.colors.surface,
+                            scrolledContainerColor = LA.colors.surface,
+                            titleContentColor = LA.colors.ink,
+                            navigationIconContentColor = LA.colors.ink,
+                            actionIconContentColor = LA.colors.inkSoft,
+                        ),
+                    )
+                    HorizontalDivider(color = LA.colors.border.copy(alpha = 0.7f))
+                }
+            }
         },
         bottomBar = bottomBar,
         contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top),
