@@ -39,6 +39,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.rork.learnanything.data.AppStore
 import com.rork.learnanything.data.Auth
+import com.rork.learnanything.ui.components.PrimaryButton
 import com.rork.learnanything.ui.components.SparkleMark
 import com.rork.learnanything.ui.screens.*
 import com.rork.learnanything.ui.theme.LA
@@ -59,6 +60,26 @@ fun AppNavigation() {
     val appState by AppStore.state.collectAsStateWithLifecycle()
     var previousSessionId by remember { mutableStateOf(session?.user?.id) }
     var showWelcomePremium by remember { mutableStateOf(false) }
+    var showLimitPremium by remember { mutableStateOf(false) }
+    var dismissedLimitKey by remember { mutableStateOf<String?>(null) }
+
+    val limitReason = when {
+        !appState.isPremium && route == Routes.TUTOR && AppStore.tutorRemaining(appState) <= 0 -> "tutor"
+        !appState.isPremium && route?.startsWith("intake") == true && appState.courses.count { !it.id.startsWith("seed") } >= AppStore.FREE_PATHS -> "paths"
+        else -> ""
+    }
+    val limitKey = if (limitReason.isBlank()) null else "$route:$limitReason"
+
+    LaunchedEffect(route) {
+        dismissedLimitKey = null
+        showLimitPremium = false
+    }
+
+    LaunchedEffect(limitKey) {
+        if (limitKey != null && limitKey != dismissedLimitKey) {
+            showLimitPremium = true
+        }
+    }
 
     LaunchedEffect(session?.user?.id, appState.isPremium) {
         val currentId = session?.user?.id
@@ -192,6 +213,54 @@ fun AppNavigation() {
                         nav.navigate(Routes.pricing(welcome = true))
                     }, Modifier.fillMaxWidth())
                     TextButton(onClick = { showWelcomePremium = false }, modifier = Modifier.fillMaxWidth()) {
+                        Text("Continue with Free", color = c.inkSoft)
+                    }
+                    Spacer(Modifier.height(8.dp))
+                }
+            }
+        }
+
+        if (showLimitPremium && !appState.isPremium && limitReason.isNotBlank()) {
+            ModalBottomSheet(
+                onDismissRequest = {
+                    dismissedLimitKey = limitKey
+                    showLimitPremium = false
+                },
+                containerColor = c.canvas,
+            ) {
+                Column(
+                    Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 24.dp, vertical = 10.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Box(Modifier.size(58.dp).clip(CircleShape).background(c.coralSoft), contentAlignment = Alignment.Center) {
+                        Icon(Icons.Rounded.AutoAwesome, null, tint = c.coral, modifier = Modifier.size(30.dp))
+                    }
+                    Spacer(Modifier.height(14.dp))
+                    Text(
+                        if (limitReason == "tutor") "You've used today's Free tutor questions" else "You've reached your Free learning-path limit",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = c.ink,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        if (limitReason == "tutor") "Premium gives you unlimited AI tutor questions, so you can keep learning right now."
+                        else "Premium gives you unlimited learning paths instead of the 1-path Free limit.",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = c.inkSoft,
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(Modifier.height(18.dp))
+                    PrimaryButton("See Premium", {
+                        showLimitPremium = false
+                        dismissedLimitKey = limitKey
+                        nav.navigate(Routes.pricing(reason = limitReason))
+                    }, Modifier.fillMaxWidth())
+                    TextButton(onClick = {
+                        dismissedLimitKey = limitKey
+                        showLimitPremium = false
+                    }, modifier = Modifier.fillMaxWidth()) {
                         Text("Continue with Free", color = c.inkSoft)
                     }
                     Spacer(Modifier.height(8.dp))
