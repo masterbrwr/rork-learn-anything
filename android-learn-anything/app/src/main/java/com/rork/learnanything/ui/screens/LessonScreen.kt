@@ -1,8 +1,13 @@
 package com.rork.learnanything.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.*
+import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.rounded.SkipNext
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -13,11 +18,13 @@ import com.rork.learnanything.data.Ai
 import com.rork.learnanything.data.LessonContent
 import com.rork.learnanything.ui.components.*
 import com.rork.learnanything.ui.navigation.Routes
+import com.rork.learnanything.ui.theme.LA
 import kotlinx.coroutines.launch
 
 @Composable
 fun LessonScreen(nav: NavController, courseId: String, lessonId: String) {
     val s by AppStore.state.collectAsStateWithLifecycle()
+    val c = LA.colors
     val course = s.courses.firstOrNull { it.id == courseId }
     val lesson = course?.allLessons?.firstOrNull { it.id == lessonId }
     val scope = rememberCoroutineScope()
@@ -72,36 +79,22 @@ fun LessonScreen(nav: NavController, courseId: String, lessonId: String) {
                     val (correct, graded, xp) = result!!
                     val updated = s.courses.firstOrNull { it.id == courseId }
                     val next = updated?.currentLesson
-                    CompletionView(
-                        title = "Lesson complete",
-                        correct = correct, graded = graded, xp = xp + 50,
-                        keyPoints = content?.keyPoints.orEmpty(),
-                        note = updated?.adaptiveNote,
-                        primary = if (next != null) "Next: ${next.title}" else "Back to path",
-                        onPrimary = {
-                            if (next != null) nav.navigate(Routes.lesson(courseId, next.id)) { popUpTo(Routes.lesson(courseId, lessonId)) { inclusive = true } }
-                            else nav.popBackStack()
-                        },
-                        secondary = if (next != null) "Back to path" else null,
-                        onSecondary = { nav.popBackStack() },
-                        modifier = Modifier.navigationBarsPadding(),
-                    )
+                    CompletionView(title = "Lesson complete", correct = correct, graded = graded, xp = xp + 50, keyPoints = content?.keyPoints.orEmpty(), note = updated?.adaptiveNote, primary = if (next != null) "Next: ${next.title}" else "Back to path", onPrimary = { if (next != null) nav.navigate(Routes.lesson(courseId, next.id)) { popUpTo(Routes.lesson(courseId, lessonId)) { inclusive = true } } else nav.popBackStack() }, secondary = if (next != null) "Back to path" else null, onSecondary = { nav.popBackStack() }, modifier = Modifier.navigationBarsPadding())
                 }
-                content != null -> StepPlayer(
-                    steps = content!!.steps,
-                    subject = course.subject,
-                    modifier = Modifier.navigationBarsPadding(),
-                    onAskTutor = { step ->
-                        AppStore.pendingTutorPrompt.value = "I'm stuck on this from \"${lesson.title}\": ${step.body.ifBlank { step.title }}. Can you explain it another way?"
-                        nav.navigate(Routes.TUTOR) { launchSingleTop = true }
-                    },
-                    onFinish = { correct, graded, xp ->
-                        val acc = if (graded == 0) 1f else correct.toFloat() / graded
-                        val minutes = ((System.currentTimeMillis() - startedAt) / 60000L).toInt().coerceIn(1, 60)
-                        AppStore.completeLesson(courseId, lessonId, acc, minutes)
-                        result = Triple(correct, graded, xp)
-                    },
-                )
+                content != null -> {
+                    Column(Modifier.fillMaxSize().background(c.canvas)) {
+                        Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 10.dp).background(c.cobaltSoft, RoundedCornerShape(16.dp)).padding(14.dp)) {
+                            Icon(Icons.Rounded.AutoAwesome, null, tint = c.cobalt)
+                            Spacer(Modifier.width(10.dp))
+                            Column {
+                                Text("Learn it, then prove it", style = MaterialTheme.typography.labelLarge, color = c.cobalt)
+                                Text("Work through each step at your pace. Ask the tutor whenever something is unclear.", style = MaterialTheme.typography.bodySmall, color = c.inkSoft)
+                            }
+                        }
+                        Spacer(Modifier.height(4.dp))
+                        StepPlayer(steps = content!!.steps, subject = course.subject, modifier = Modifier.navigationBarsPadding(), onAskTutor = { step -> AppStore.pendingTutorPrompt.value = "I'm stuck on this from \"${lesson.title}\": ${step.body.ifBlank { step.title }}. Can you explain it another way?"; nav.navigate(Routes.TUTOR) { launchSingleTop = true } }, onFinish = { correct, graded, xp -> val acc = if (graded == 0) 1f else correct.toFloat() / graded; val minutes = ((System.currentTimeMillis() - startedAt) / 60000L).toInt().coerceIn(1, 60); AppStore.completeLesson(courseId, lessonId, acc, minutes); result = Triple(correct, graded, xp) })
+                    }
+                }
                 error != null -> ErrorState(message = error!!, onRetry = { load() }, onBack = { nav.popBackStack() }, onHome = { nav.goHome() })
                 else -> GeneratingState(listOf("Designing your lesson…", "Picking the best examples…", "Drawing the visuals…", "Writing practice questions…"))
             }
