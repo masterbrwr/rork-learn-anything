@@ -132,7 +132,7 @@ fun TutorScreen(nav: NavController) {
                 Text("Your AI learning partner", style = MaterialTheme.typography.bodyLarge, color = c.inkSoft)
             }
             IconButton(onClick = { AppStore.update { it.copy(tutorVoice = !it.tutorVoice) }; if (s.tutorVoice) tts?.stop() }) {
-                Icon(if (s.tutorVoice) Icons.AutoMirrored.Rounded.VolumeUp else Icons.AutoMirrored.Rounded.VolumeOff, if (s.tutorVoice) "Turn voice replies off" else "Read replies aloud", tint = if (s.tutorVoice) c.coral else c.inkSoft)
+                Icon(if (s.tutorVoice) Icons.AutoMirrored.Rounded.VolumeUp else Icons.AutoMirrored.Rounded.VolumeOff, if (s.tutorVoice) "Turn voice replies off" else "Read replies aloud", tint = if (s.tutorVoice) c.cobalt else c.inkSoft)
             }
             Box {
                 IconButton(onClick = { menu = true }) { Icon(Icons.Rounded.MoreVert, "Tutor options", tint = c.ink) }
@@ -150,7 +150,7 @@ fun TutorScreen(nav: NavController) {
                     label = { Text(m) },
                     leadingIcon = { Icon(MODE_ICONS[m] ?: Icons.Rounded.AutoAwesome, null, Modifier.size(18.dp)) },
                     shape = CircleShape,
-                    colors = FilterChipDefaults.filterChipColors(selectedContainerColor = c.coralSoft, selectedLabelColor = c.coral, selectedLeadingIconColor = c.coral, containerColor = c.surface),
+                    colors = FilterChipDefaults.filterChipColors(selectedContainerColor = c.cobaltSoft, selectedLabelColor = c.cobalt, selectedLeadingIconColor = c.cobalt, containerColor = c.surface),
                 )
             }
         }
@@ -194,7 +194,6 @@ fun TutorScreen(nav: NavController) {
             }
         }
 
-        // Composer
         Row(
             Modifier.padding(horizontal = 20.dp, vertical = 10.dp).fillMaxWidth().clip(RoundedCornerShape(28.dp)).background(c.surface)
                 .border(1.dp, c.border, RoundedCornerShape(28.dp)).padding(start = 20.dp, end = 6.dp, top = 6.dp, bottom = 6.dp),
@@ -204,7 +203,7 @@ fun TutorScreen(nav: NavController) {
                 if (input.isEmpty()) Text("Ask or say anything", color = c.inkFaint, style = MaterialTheme.typography.bodyLarge)
                 BasicTextField(
                     input, { input = it }, Modifier.fillMaxWidth().animateContentSize(), maxLines = 5,
-                    textStyle = TextStyle(color = c.ink, fontSize = 16.sp), cursorBrush = SolidColor(c.coral),
+                    textStyle = TextStyle(color = c.ink, fontSize = 16.sp), cursorBrush = SolidColor(c.cobalt),
                     enabled = remaining > 0,
                 )
             }
@@ -213,7 +212,7 @@ fun TutorScreen(nav: NavController) {
             Spacer(Modifier.width(6.dp))
             FilledIconButton(
                 onClick = { send(input) }, enabled = input.isNotBlank() && !thinking && remaining > 0,
-                colors = IconButtonDefaults.filledIconButtonColors(containerColor = c.coral, contentColor = androidx.compose.ui.graphics.Color.White, disabledContainerColor = c.border),
+                colors = IconButtonDefaults.filledIconButtonColors(containerColor = c.cobalt, contentColor = androidx.compose.ui.graphics.Color.White, disabledContainerColor = c.border),
                 modifier = Modifier.size(46.dp),
             ) { Icon(Icons.AutoMirrored.Rounded.Send, "Send") }
         }
