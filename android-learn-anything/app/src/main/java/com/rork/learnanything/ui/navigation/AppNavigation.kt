@@ -21,7 +21,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -76,23 +76,19 @@ fun AppNavigation() {
     }
 
     LaunchedEffect(limitKey) {
-        if (limitKey != null && limitKey != dismissedLimitKey) {
-            showLimitPremium = true
-        }
+        if (limitKey != null && limitKey != dismissedLimitKey) showLimitPremium = true
     }
 
     LaunchedEffect(session?.user?.id, appState.isPremium) {
         val currentId = session?.user?.id
-        if (currentId != null && previousSessionId == null && !appState.isPremium) {
-            showWelcomePremium = true
-        }
+        if (currentId != null && previousSessionId == null && !appState.isPremium) showWelcomePremium = true
         previousSessionId = currentId
     }
 
     val tabs = listOf(
         Tab(Routes.HOME, "Home", Icons.Outlined.Home, Icons.Rounded.Home),
         Tab(Routes.PATHS, "Paths", Icons.AutoMirrored.Outlined.MenuBook, Icons.AutoMirrored.Rounded.MenuBook),
-        Tab(Routes.TUTOR, "Tutor", Icons.Outlined.Home, null),
+        Tab(Routes.TUTOR, "Tutor", Icons.Rounded.AutoAwesome, Icons.Rounded.AutoAwesome),
         Tab(Routes.STUDY, "Study", Icons.Outlined.BarChart, Icons.Rounded.BarChart),
         Tab(Routes.PROFILE, "Profile", Icons.Outlined.Person, Icons.Rounded.Person),
     )
@@ -105,7 +101,7 @@ fun AppNavigation() {
                 AnimatedVisibility(showBar, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
                     Column {
                         HorizontalDivider(color = c.border)
-                        NavigationBar(containerColor = c.canvas, tonalElevation = 0.dp) {
+                        NavigationBar(containerColor = c.surface, tonalElevation = 0.dp, windowInsets = WindowInsets(0)) {
                             tabs.forEach { t ->
                                 val selected = entry?.destination?.hierarchy?.any { it.route == t.route } == true
                                 NavigationBarItem(
@@ -118,13 +114,24 @@ fun AppNavigation() {
                                         }
                                     },
                                     icon = {
-                                        if (t.selectedIcon == null) SparkleMark(Modifier.size(22.dp), if (selected) c.coral else c.inkSoft)
-                                        else Icon(if (selected) t.selectedIcon else t.icon, null)
+                                        if (t.route == Routes.TUTOR) {
+                                            Box(
+                                                Modifier.size(32.dp).clip(CircleShape).background(if (selected) c.coralSoft else c.surfaceAlt),
+                                                contentAlignment = Alignment.Center,
+                                            ) {
+                                                Icon(Icons.Rounded.AutoAwesome, null, tint = if (selected) c.coral else c.inkSoft, modifier = Modifier.size(18.dp))
+                                            }
+                                        } else {
+                                            Icon(if (selected) t.selectedIcon ?: t.icon else t.icon, null)
+                                        }
                                     },
                                     label = { Text(t.label) },
                                     colors = NavigationBarItemDefaults.colors(
-                                        selectedIconColor = c.coral, selectedTextColor = c.coral, indicatorColor = c.coralSoft,
-                                        unselectedIconColor = c.inkSoft, unselectedTextColor = c.inkSoft,
+                                        selectedIconColor = c.coral,
+                                        selectedTextColor = c.coral,
+                                        indicatorColor = c.coralSoft,
+                                        unselectedIconColor = c.inkSoft,
+                                        unselectedTextColor = c.inkSoft,
                                     ),
                                 )
                             }
