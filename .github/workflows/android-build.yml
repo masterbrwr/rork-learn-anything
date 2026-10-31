@@ -77,7 +77,29 @@ jobs:
             git push
           fi
 
-      # Build trigger: keep the installable APK current with main.
+      - name: Fix Compose imports for redesigned screens
+        shell: python
+        run: |
+          from pathlib import Path
+
+          files = {
+              Path('android-learn-anything/app/src/main/java/com/rork/learnanything/ui/components/Chrome.kt'): [
+                  ('import androidx.compose.ui.Modifier\n', 'import androidx.compose.ui.Modifier\nimport androidx.compose.ui.unit.dp\n'),
+              ],
+              Path('android-learn-anything/app/src/main/java/com/rork/learnanything/ui/navigation/AppNavigation.kt'): [
+                  ('import androidx.compose.foundation.background\n', 'import androidx.compose.foundation.background\nimport androidx.compose.foundation.clip\n'),
+              ],
+              Path('android-learn-anything/app/src/main/java/com/rork/learnanything/ui/screens/LessonScreen.kt'): [
+                  ('import androidx.compose.ui.Modifier\n', 'import androidx.compose.ui.Modifier\nimport androidx.compose.ui.unit.dp\n'),
+              ],
+          }
+          for path, replacements in files.items():
+              text = path.read_text()
+              for old, new in replacements:
+                  if new not in text:
+                      text = text.replace(old, new, 1)
+              path.write_text(text)
+
       - name: Configure Supabase app settings
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
