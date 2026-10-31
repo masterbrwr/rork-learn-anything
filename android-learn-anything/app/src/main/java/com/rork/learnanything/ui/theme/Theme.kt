@@ -15,6 +15,7 @@ import androidx.compose.material.icons.rounded.SportsSoccer
 import androidx.compose.material.icons.rounded.Translate
 import androidx.compose.material.icons.automirrored.rounded.TrendingUp
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
@@ -28,6 +29,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rork.learnanything.R
 
@@ -59,7 +61,7 @@ data class LAColors(
     val isDark: Boolean,
 )
 
-// Modern visual direction: cool, crisp, premium, and technology-forward.
+// Cool, crisp, premium, and technology-forward.
 private val Light = LAColors(
     canvas = Color(0xFFF5F7FB), surface = Color(0xFFFFFFFF), surfaceAlt = Color(0xFFEEF2F7), border = Color(0xFFDCE3EC),
     ink = Color(0xFF0B1220), inkSoft = Color(0xFF5B6577), inkFaint = Color(0xFF98A2B3),
@@ -118,11 +120,11 @@ val Tabular = TextStyle(fontFeatureSettings = "tnum")
 private fun typography(): Typography {
     val base = Typography()
     return base.copy(
-        displaySmall = base.displaySmall.copy(fontWeight = FontWeight.Bold, fontSize = 34.sp, lineHeight = 40.sp, letterSpacing = (-0.8).sp),
-        headlineLarge = base.headlineLarge.copy(fontWeight = FontWeight.Bold, fontSize = 30.sp, lineHeight = 36.sp, letterSpacing = (-0.5).sp),
-        headlineMedium = base.headlineMedium.copy(fontWeight = FontWeight.Bold, fontSize = 26.sp, lineHeight = 32.sp, letterSpacing = (-0.4).sp),
-        headlineSmall = base.headlineSmall.copy(fontWeight = FontWeight.Bold, fontSize = 22.sp, lineHeight = 28.sp, letterSpacing = (-0.25).sp),
-        titleLarge = base.titleLarge.copy(fontWeight = FontWeight.Bold, fontSize = 20.sp, lineHeight = 26.sp),
+        displaySmall = TextStyle(fontFamily = Serif, fontWeight = FontWeight.SemiBold, fontSize = 34.sp, lineHeight = 40.sp, letterSpacing = (-0.5).sp),
+        headlineLarge = TextStyle(fontFamily = Serif, fontWeight = FontWeight.SemiBold, fontSize = 30.sp, lineHeight = 36.sp, letterSpacing = (-0.4).sp),
+        headlineMedium = TextStyle(fontFamily = Serif, fontWeight = FontWeight.SemiBold, fontSize = 26.sp, lineHeight = 32.sp, letterSpacing = (-0.3).sp),
+        headlineSmall = TextStyle(fontFamily = Serif, fontWeight = FontWeight.SemiBold, fontSize = 22.sp, lineHeight = 28.sp, letterSpacing = (-0.2).sp),
+        titleLarge = TextStyle(fontFamily = Serif, fontWeight = FontWeight.SemiBold, fontSize = 20.sp, lineHeight = 26.sp),
         titleMedium = base.titleMedium.copy(fontWeight = FontWeight.SemiBold, fontSize = 16.sp),
         bodyLarge = base.bodyLarge.copy(fontSize = 16.sp, lineHeight = 24.sp),
         bodyMedium = base.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp),
@@ -133,6 +135,14 @@ private fun typography(): Typography {
         titleSmall = base.titleSmall.copy(fontWeight = FontWeight.SemiBold, fontSize = 14.sp, letterSpacing = 0.1.sp),
     )
 }
+
+private val AppShapes = Shapes(
+    extraSmall = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
+    small = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+    medium = androidx.compose.foundation.shape.RoundedCornerShape(18.dp),
+    large = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
+    extraLarge = androidx.compose.foundation.shape.RoundedCornerShape(30.dp),
+)
 
 @Composable
 fun AppTheme(themeMode: String = "system", content: @Composable () -> Unit) {
@@ -168,6 +178,6 @@ fun AppTheme(themeMode: String = "system", content: @Composable () -> Unit) {
         }
     }
     CompositionLocalProvider(LocalLAColors provides c) {
-        MaterialTheme(colorScheme = scheme, typography = typography(), content = content)
+        MaterialTheme(colorScheme = scheme, typography = typography(), shapes = AppShapes, content = content)
     }
 }
