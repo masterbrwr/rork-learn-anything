@@ -75,7 +75,7 @@ fun PathsScreen(nav: NavController) {
             Spacer(Modifier.height(12.dp))
             val anim by androidx.compose.animation.core.animateFloatAsState(course.progress, label = "p")
             Box(Modifier.fillMaxWidth().height(12.dp).clip(CircleShape).background(c.border)) {
-                Box(Modifier.fillMaxWidth(anim).fillMaxHeight().clip(CircleShape).background(c.coral))
+                Box(Modifier.fillMaxWidth(anim).fillMaxHeight().clip(CircleShape).background(c.cobalt))
             }
             Spacer(Modifier.height(10.dp))
             Row(Modifier.fillMaxWidth()) {
@@ -103,9 +103,7 @@ fun PathsScreen(nav: NavController) {
         Column(Modifier.padding(horizontal = 20.dp)) {
             if (course.adaptiveNote.isNotBlank()) {
                 Spacer(Modifier.height(16.dp))
-                Row(
-                    Modifier.fillMaxWidth().height(IntrinsicSize.Min).clip(RoundedCornerShape(16.dp)).background(c.cobaltSoft)
-                ) {
+                Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min).clip(RoundedCornerShape(16.dp)).background(c.cobaltSoft)) {
                     Box(Modifier.width(4.dp).fillMaxHeight().background(c.cobalt))
                     Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                         SparkleMark(Modifier.size(22.dp), c.cobalt)
@@ -122,12 +120,7 @@ fun PathsScreen(nav: NavController) {
                 m.lessons.forEachIndexed { li, l ->
                     val isLastInModule = li == m.lessons.lastIndex
                     val next = m.lessons.getOrNull(li + 1)
-                    LessonNode(
-                        l, isCurrent = l.id == current, showLine = !isLastInModule,
-                        lineSolid = l.status == "done" && next?.status == "done",
-                        onClick = { AppStore.setActiveCourse(course.id); nav.navigate(Routes.lesson(course.id, l.id)) },
-                        onLongClick = { lessonMenu = l },
-                    )
+                    LessonNode(l, isCurrent = l.id == current, showLine = !isLastInModule, lineSolid = l.status == "done" && next?.status == "done", onClick = { AppStore.setActiveCourse(course.id); nav.navigate(Routes.lesson(course.id, l.id)) }, onLongClick = { lessonMenu = l })
                 }
             }
             Spacer(Modifier.height(20.dp))
@@ -168,49 +161,26 @@ fun PathsScreen(nav: NavController) {
 @Composable
 private fun StatText(value: String, rest: String, modifier: Modifier = Modifier, prefix: String = "") {
     val c = LA.colors
-    Text(
-        androidx.compose.ui.text.buildAnnotatedString {
-            append(prefix)
-            pushStyle(androidx.compose.ui.text.SpanStyle(fontWeight = FontWeight.Bold, color = c.ink)); append(value); pop()
-            append(rest)
-        },
-        modifier = modifier, style = MaterialTheme.typography.bodyMedium, color = c.inkSoft,
-    )
+    Text(androidx.compose.ui.text.buildAnnotatedString { append(prefix); pushStyle(androidx.compose.ui.text.SpanStyle(fontWeight = FontWeight.Bold, color = c.ink)); append(value); pop(); append(rest) }, modifier = modifier, style = MaterialTheme.typography.bodyMedium, color = c.inkSoft)
 }
 
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 private fun LessonNode(l: LessonRef, isCurrent: Boolean, showLine: Boolean, lineSolid: Boolean, onClick: () -> Unit, onLongClick: () -> Unit) {
     val c = LA.colors
-    val subtitle = when {
-        l.status == "skipped" -> "skipped"
-        l.status == "review" -> "${l.note.ifBlank { "extra practice" }} · ${l.minutes} min"
-        l.status == "done" && l.accuracy >= 0 -> "${l.minutes} min · ${(l.accuracy * 100).toInt()}% correct"
-        else -> "${l.minutes} min"
-    }
+    val subtitle = when { l.status == "skipped" -> "skipped"; l.status == "review" -> "${l.note.ifBlank { "extra practice" }} · ${l.minutes} min"; l.status == "done" && l.accuracy >= 0 -> "${l.minutes} min · ${(l.accuracy * 100).toInt()}% correct"; else -> "${l.minutes} min" }
     Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
         Box(Modifier.width(44.dp).fillMaxHeight()) {
-            val green = c.success; val faint = c.inkFaint
             Canvas(Modifier.fillMaxSize()) {
                 if (showLine) {
                     val x = size.width / 2
-                    drawLine(
-                        if (lineSolid) green else faint.copy(alpha = 0.6f), Offset(x, 40.dp.toPx()), Offset(x, size.height + 8.dp.toPx()), 2.dp.toPx(),
-                        pathEffect = if (lineSolid) null else PathEffect.dashPathEffect(floatArrayOf(8f, 8f)),
-                    )
+                    drawLine(if (lineSolid) c.success else c.inkFaint.copy(alpha = 0.6f), Offset(x, 40.dp.toPx()), Offset(x, size.height + 8.dp.toPx()), 2.dp.toPx(), pathEffect = if (lineSolid) null else PathEffect.dashPathEffect(floatArrayOf(8f, 8f)))
                 }
             }
             Box(Modifier.padding(top = 18.dp).align(Alignment.TopCenter)) { NodeDot(l.status, isCurrent) }
         }
         Spacer(Modifier.width(8.dp))
-        Row(
-            Modifier.weight(1f).padding(vertical = 6.dp).clip(RoundedCornerShape(18.dp))
-                .background(if (isCurrent) c.coralSoft else c.surface)
-                .border(1.dp, if (isCurrent) c.coral.copy(alpha = 0.3f) else c.border, RoundedCornerShape(18.dp))
-                .combinedClickable(onClick = onClick, onLongClick = onLongClick, onLongClickLabel = "Lesson options")
-                .padding(horizontal = 18.dp, vertical = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
+        Row(Modifier.weight(1f).padding(vertical = 6.dp).clip(RoundedCornerShape(18.dp)).background(if (isCurrent) c.cobaltSoft else c.surface).border(1.dp, if (isCurrent) c.cobalt.copy(alpha = 0.3f) else c.border, RoundedCornerShape(18.dp)).combinedClickable(onClick = onClick, onLongClick = onLongClick, onLongClickLabel = "Lesson options").padding(horizontal = 18.dp, vertical = 16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(l.title, style = MaterialTheme.typography.titleLarge.copy(fontSize = 18.sp), color = if (l.status == "skipped") c.inkSoft else c.ink)
                 Spacer(Modifier.height(2.dp))
@@ -227,18 +197,9 @@ private fun NodeDot(status: String, current: Boolean) {
     val c = LA.colors
     val size = 30.dp
     when {
-        status == "done" -> Box(Modifier.size(size).clip(CircleShape).background(c.success), contentAlignment = Alignment.Center) {
-            Icon(Icons.Rounded.Check, "Done", tint = Color.White, modifier = Modifier.size(18.dp))
-        }
-        current -> Box(Modifier.size(size).clip(CircleShape).background(c.coral), contentAlignment = Alignment.Center) {
-            Box(Modifier.size(9.dp).clip(CircleShape).background(Color.White))
-        }
-        status == "skipped" -> {
-            val faint = c.inkFaint
-            Canvas(Modifier.size(size)) {
-                drawCircle(faint, this.size.minDimension / 2 - 2.dp.toPx(), style = Stroke(2.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(7f, 6f))))
-                drawLine(faint, Offset(this.size.width * 0.38f, center.y), Offset(this.size.width * 0.62f, center.y), 2.dp.toPx())
-            }
+        status == "done" -> Box(Modifier.size(size).clip(CircleShape).background(c.success), contentAlignment = Alignment.Center) { Icon(Icons.Rounded.Check, "Done", tint = Color.White, modifier = Modifier.size(18.dp)) }
+        current -> Box(Modifier.size(size).clip(CircleShape).background(c.cobalt), contentAlignment = Alignment.Center) { Box(Modifier.size(9.dp).clip(CircleShape).background(Color.White)) }
+        status == "skipped" -> { val faint = c.inkFaint; Canvas(Modifier.size(size)) { drawCircle(faint, this.size.minDimension / 2 - 2.dp.toPx(), style = Stroke(2.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(7f, 6f)))); drawLine(faint, Offset(this.size.width * 0.38f, center.y), Offset(this.size.width * 0.62f, center.y), 2.dp.toPx()) }
         }
         status == "review" -> Box(Modifier.size(size).clip(CircleShape).border(2.5.dp, c.cobalt, CircleShape).background(c.surface))
         else -> Box(Modifier.size(size).clip(CircleShape).border(2.dp, c.inkFaint, CircleShape).background(c.surface))
@@ -262,16 +223,12 @@ private fun PathFooter(course: Course, nav: NavController) {
         Text("Check your foundations", style = MaterialTheme.typography.titleLarge, color = c.ink)
         Text("Quick quizzes to catch gaps before they slow you down.", style = MaterialTheme.typography.bodySmall, color = c.inkSoft)
         Spacer(Modifier.height(8.dp))
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            course.prerequisites.forEach { p -> AssistChip(onClick = { nav.navigate(Routes.quiz("quiz", p)) }, label = { Text(p) }, leadingIcon = { Icon(Icons.Rounded.Quiz, null, Modifier.size(16.dp)) }) }
-        }
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) { course.prerequisites.forEach { p -> AssistChip(onClick = { nav.navigate(Routes.quiz("quiz", p)) }, label = { Text(p) }, leadingIcon = { Icon(Icons.Rounded.Quiz, null, Modifier.size(16.dp)) }) } }
         Spacer(Modifier.height(16.dp))
     }
     if (course.nextSteps.isNotEmpty()) {
         Text("What to learn next", style = MaterialTheme.typography.titleLarge, color = c.ink)
         Spacer(Modifier.height(8.dp))
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            course.nextSteps.forEach { p -> AssistChip(onClick = { nav.navigate(Routes.intake(p)) }, label = { Text(p) }, leadingIcon = { Icon(Icons.Rounded.Add, null, Modifier.size(16.dp)) }) }
-        }
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) { course.nextSteps.forEach { p -> AssistChip(onClick = { nav.navigate(Routes.intake(p)) }, label = { Text(p) }, leadingIcon = { Icon(Icons.Rounded.Add, null, Modifier.size(16.dp)) }) } }
     }
 }
