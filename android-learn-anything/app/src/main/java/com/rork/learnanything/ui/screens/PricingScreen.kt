@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -43,7 +44,7 @@ private data class LimitRow(
 )
 
 @Composable
-fun PricingScreen(nav: NavController) {
+fun PricingScreen(nav: NavController, welcome: Boolean = false, reason: String = "") {
     val s by AppStore.state.collectAsStateWithLifecycle()
     val c = LA.colors
     val ctx = androidx.compose.ui.platform.LocalContext.current
@@ -91,6 +92,17 @@ fun PricingScreen(nav: NavController) {
         LimitRow("Voice tutor", "Unlimited", "Unlimited", voice = true),
     )
 
+    val reasonTitle = when (reason) {
+        "tutor" -> "You've reached today's AI tutor limit"
+        "paths" -> "You've reached your Free learning-path limit"
+        else -> "You're at a Free-tier limit"
+    }
+    val reasonBody = when (reason) {
+        "tutor" -> "You used all 10 Free tutor questions today. Premium removes the daily cap."
+        "paths" -> "Free includes 1 active learning path. Premium gives you unlimited paths."
+        else -> "Upgrade to keep going without the Free-tier limits."
+    }
+
     DetailScaffold(title = "Premium", onBack = { nav.popBackStack() }, bottomBar = {
         Column(Modifier.navigationBarsPadding().padding(horizontal = 20.dp, vertical = 12.dp)) {
             if (s.isPremium) {
@@ -103,6 +115,9 @@ fun PricingScreen(nav: NavController) {
                     enabled = !busy,
                     loading = busy,
                 )
+                TextButton(onClick = { nav.popBackStack() }, modifier = Modifier.fillMaxWidth(), enabled = !busy) {
+                    Text(if (welcome) "Continue with Free" else "Keep using Free", color = c.inkSoft)
+                }
             }
             TextButton(onClick = { restore() }, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
                 Text("Check Premium status", color = c.inkSoft)
@@ -124,6 +139,21 @@ fun PricingScreen(nav: NavController) {
                 .padding(horizontal = 20.dp),
         ) {
             Spacer(Modifier.height(12.dp))
+
+            if (!s.isPremium && (welcome || reason.isNotBlank())) {
+                LACard(Modifier.fillMaxWidth(), color = c.coralSoft, borderColor = c.coral.copy(alpha = .25f)) {
+                    Row(verticalAlignment = Alignment.Top) {
+                        Icon(Icons.Rounded.AutoAwesome, null, tint = c.coral, modifier = Modifier.size(22.dp))
+                        Spacer(Modifier.width(10.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(if (welcome) "Start with Premium" else reasonTitle, style = MaterialTheme.typography.titleMedium, color = c.ink, fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.height(3.dp))
+                            Text(if (welcome) "Try all of Learn Anything with a 7-day free trial, or continue with the Free version below." else reasonBody, style = MaterialTheme.typography.bodySmall, color = c.inkSoft)
+                        }
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
+            }
 
             if (s.isPremium) {
                 LACard(Modifier.fillMaxWidth(), color = c.successSoft, borderColor = c.success.copy(alpha = .3f)) {
