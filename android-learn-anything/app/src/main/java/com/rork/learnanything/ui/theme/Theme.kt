@@ -59,25 +59,26 @@ data class LAColors(
     val isDark: Boolean,
 )
 
+// New visual direction: cool, crisp, premium, and technology-forward.
 private val Light = LAColors(
-    canvas = Color(0xFFF7F4EE), surface = Color(0xFFFFFFFF), surfaceAlt = Color(0xFFF0ECE4), border = Color(0xFFE6E0D5),
-    ink = Color(0xFF14171F), inkSoft = Color(0xFF5F6675), inkFaint = Color(0xFF9AA0AB),
-    hero = Color(0xFF101828), onHero = Color(0xFFF7F4EE),
-    coral = Color(0xFFF2553A), coralSoft = Color(0xFFFDE7E1),
-    cobalt = Color(0xFF2F4BDB), cobaltSoft = Color(0xFFE6EBFC),
-    success = Color(0xFF2E8B57), successSoft = Color(0xFFE2F2E8),
-    amber = Color(0xFFD9901A), amberSoft = Color(0xFFFCF0D9),
+    canvas = Color(0xFFF5F7FB), surface = Color(0xFFFFFFFF), surfaceAlt = Color(0xFFEEF2F7), border = Color(0xFFDCE3EC),
+    ink = Color(0xFF0B1220), inkSoft = Color(0xFF5B6577), inkFaint = Color(0xFF98A2B3),
+    hero = Color(0xFF0B1220), onHero = Color(0xFFF7F9FC),
+    coral = Color(0xFF5B5CE2), coralSoft = Color(0xFFE9E9FF),
+    cobalt = Color(0xFF08A6B5), cobaltSoft = Color(0xFFE0F7F9),
+    success = Color(0xFF16845B), successSoft = Color(0xFFE0F5EC),
+    amber = Color(0xFFD18A16), amberSoft = Color(0xFFFFF2D8),
     isDark = false,
 )
 
 private val Dark = LAColors(
-    canvas = Color(0xFF0E1117), surface = Color(0xFF171B23), surfaceAlt = Color(0xFF1F2430), border = Color(0xFF2A303C),
-    ink = Color(0xFFF2EFE8), inkSoft = Color(0xFFA3AAB8), inkFaint = Color(0xFF6B7280),
-    hero = Color(0xFF1A2236), onHero = Color(0xFFF2EFE8),
-    coral = Color(0xFFFF6A4D), coralSoft = Color(0xFF3A1F1A),
-    cobalt = Color(0xFF8197FF), cobaltSoft = Color(0xFF1D2442),
-    success = Color(0xFF4CB97A), successSoft = Color(0xFF16291F),
-    amber = Color(0xFFF0B04A), amberSoft = Color(0xFF33281A),
+    canvas = Color(0xFF080C14), surface = Color(0xFF111827), surfaceAlt = Color(0xFF182235), border = Color(0xFF273449),
+    ink = Color(0xFFF5F7FB), inkSoft = Color(0xFFAAB5C7), inkFaint = Color(0xFF68758A),
+    hero = Color(0xFF111A2D), onHero = Color(0xFFF5F7FB),
+    coral = Color(0xFF8586FF), coralSoft = Color(0xFF25264F),
+    cobalt = Color(0xFF48D2DE), cobaltSoft = Color(0xFF12363D),
+    success = Color(0xFF45C98D), successSoft = Color(0xFF123327),
+    amber = Color(0xFFF1B84B), amberSoft = Color(0xFF3A2D15),
     isDark = true,
 )
 
@@ -95,26 +96,23 @@ fun worldStyle(world: String): WorldStyle {
     val dark = LA.colors.isDark
     fun soft(c: Color) = if (dark) c.copy(alpha = 0.18f) else c.copy(alpha = 0.12f)
     val (name, accent, icon) = when (world) {
-        "math" -> Triple("Math", Color(0xFF3D5AFE).let { if (dark) Color(0xFF8C9EFF) else it }, Icons.Rounded.Functions)
-        "programming" -> Triple("Programming", if (dark) Color(0xFF4DD0C4) else Color(0xFF0E8577), Icons.Rounded.Code)
-        "mechanics" -> Triple("Mechanics", if (dark) Color(0xFFFF7A59) else Color(0xFFE0492C), Icons.Rounded.Build)
-        "science" -> Triple("Science", if (dark) Color(0xFF6FCF97) else Color(0xFF23885A), Icons.Rounded.Science)
-        "history" -> Triple("History", if (dark) Color(0xFFE0B26B) else Color(0xFF9A6A22), Icons.Rounded.HistoryEdu)
-        "business" -> Triple("Business", if (dark) Color(0xFF7BC8A4) else Color(0xFF1F6E4E), Icons.AutoMirrored.Rounded.TrendingUp)
-        "language" -> Triple("Languages", if (dark) Color(0xFFF48FB1) else Color(0xFFC2185B), Icons.Rounded.Translate)
-        "music" -> Triple("Music", if (dark) Color(0xFFB39DDB) else Color(0xFF6A3FB5), Icons.Rounded.MusicNote)
-        "sports" -> Triple("Sports", if (dark) Color(0xFF81D4FA) else Color(0xFF0277BD), Icons.Rounded.SportsSoccer)
-        "mind" -> Triple("Mind & Career", if (dark) Color(0xFFCE93D8) else Color(0xFF8E3A9E), Icons.Rounded.Psychology)
-        "geography" -> Triple("Geography", if (dark) Color(0xFF80CBC4) else Color(0xFF2B7A78), Icons.Rounded.Public)
-        else -> Triple("General", if (dark) Color(0xFF8197FF) else Color(0xFF2F4BDB), Icons.Rounded.AutoAwesome)
+        "math" -> Triple("Math", if (dark) Color(0xFF9DA4FF) else Color(0xFF5963E8), Icons.Rounded.Functions)
+        "programming" -> Triple("Programming", if (dark) Color(0xFF62DCD0) else Color(0xFF0B8F83), Icons.Rounded.Code)
+        "mechanics" -> Triple("Mechanics", if (dark) Color(0xFFFF8C72) else Color(0xFFE45A3C), Icons.Rounded.Build)
+        "science" -> Triple("Science", if (dark) Color(0xFF72D89D) else Color(0xFF238B60), Icons.Rounded.Science)
+        "history" -> Triple("History", if (dark) Color(0xFFE6BE73) else Color(0xFF9B6B25), Icons.Rounded.HistoryEdu)
+        "business" -> Triple("Business", if (dark) Color(0xFF82D1AA) else Color(0xFF257A58), Icons.AutoMirrored.Rounded.TrendingUp)
+        "language" -> Triple("Languages", if (dark) Color(0xFFFF9DC0) else Color(0xFFC52A68), Icons.Rounded.Translate)
+        "music" -> Triple("Music", if (dark) Color(0xFFC2A8F0) else Color(0xFF7048BD), Icons.Rounded.MusicNote)
+        "sports" -> Triple("Sports", if (dark) Color(0xFF8EDBFF) else Color(0xFF087BAF), Icons.Rounded.SportsSoccer)
+        "mind" -> Triple("Mind & Career", if (dark) Color(0xFFD8A0E0) else Color(0xFF9346A2), Icons.Rounded.Psychology)
+        "geography" -> Triple("Geography", if (dark) Color(0xFF83D5CE) else Color(0xFF287F7C), Icons.Rounded.Public)
+        else -> Triple("General", if (dark) Color(0xFF9DA4FF) else Color(0xFF5963E8), Icons.Rounded.AutoAwesome)
     }
     return WorldStyle(name, accent, soft(accent), icon)
 }
 
-/** Small uppercase label used above sections and metrics. */
 val OverlineStyle = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 11.sp, lineHeight = 14.sp, letterSpacing = 1.2.sp)
-
-/** Tabular figures so numbers don't jitter as they change. */
 val Tabular = TextStyle(fontFeatureSettings = "tnum")
 
 private fun typography(): Typography {
@@ -146,14 +144,14 @@ fun AppTheme(themeMode: String = "system", content: @Composable () -> Unit) {
     val c = if (dark) Dark else Light
     val scheme = if (dark) darkColorScheme(
         primary = c.coral, onPrimary = Color.White, primaryContainer = c.coralSoft, onPrimaryContainer = c.coral,
-        secondary = c.cobalt, onSecondary = Color.White, secondaryContainer = c.coralSoft, onSecondaryContainer = c.coral,
+        secondary = c.cobalt, onSecondary = Color.White, secondaryContainer = c.cobaltSoft, onSecondaryContainer = c.cobalt,
         tertiary = c.success, background = c.canvas, onBackground = c.ink, surface = c.canvas, onSurface = c.ink,
         surfaceVariant = c.surfaceAlt, onSurfaceVariant = c.inkSoft, outline = c.border, outlineVariant = c.border,
         surfaceContainer = c.surface, surfaceContainerLow = c.surface, surfaceContainerHigh = c.surfaceAlt,
         surfaceContainerHighest = c.surfaceAlt, surfaceContainerLowest = c.canvas, error = Color(0xFFFF6B6B),
     ) else lightColorScheme(
-        primary = c.coral, onPrimary = Color.White, primaryContainer = c.coralSoft, onPrimaryContainer = Color(0xFF8A2512),
-        secondary = c.cobalt, onSecondary = Color.White, secondaryContainer = c.coralSoft, onSecondaryContainer = Color(0xFF8A2512),
+        primary = c.coral, onPrimary = Color.White, primaryContainer = c.coralSoft, onPrimaryContainer = Color(0xFF383A9A),
+        secondary = c.cobalt, onSecondary = Color.White, secondaryContainer = c.cobaltSoft, onSecondaryContainer = Color(0xFF08606A),
         tertiary = c.success, background = c.canvas, onBackground = c.ink, surface = c.canvas, onSurface = c.ink,
         surfaceVariant = c.surfaceAlt, onSurfaceVariant = c.inkSoft, outline = c.border, outlineVariant = c.border,
         surfaceContainer = c.surface, surfaceContainerLow = c.surface, surfaceContainerHigh = c.surfaceAlt,
