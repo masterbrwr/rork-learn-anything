@@ -1,0 +1,76 @@
+name: Product pivot - outcome learning
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  pivot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply outcome-driven product changes
+        shell: python
+        run: |
+          from pathlib import Path
+          root = Path('android-learn-anything/app/src/main/java/com/rork/learnanything')
+
+          ai = root / 'data/Ai.kt'
+          text = ai.read_text()
+          text = text.replace('): CourseDraft = = try {', '): CourseDraft = try {')
+          old = '''You are the curriculum designer for Learn Anything. Your job is to create real understanding and usable skills, not a list of topics or a test-prep treadmill. Build a carefully scaffolded path that starts with fundamentals and grows toward specific, advanced applications.'''
+          new = '''You are the curriculum designer for Learn Anything. Position every learning path as an outcome-driven roadmap, not an encyclopedia. The learner is paying for structure, momentum, accountability, practice, and measurable progress. Turn a broad goal into a concrete result the learner can achieve. Prefer short daily missions, usually 5-15 minutes, with a clear win at the end of each mission. Build from prerequisites to the first useful result, then progressively harder applications. Use retrieval, spaced review, interleaving, worked examples, feedback, and real-world transfer. Avoid filler and generic AI lectures.'''
+          text = text.replace(old, new)
+          old_user = '''Design a personalized path in prerequisite order. ALWAYS teach essential foundations before advanced or specific material, even if the learner's goal sounds advanced. Start with plain-language basics, key vocabulary, and the mental model; then build one concept at a time; then worked examples and real-world use; only later move to advanced techniques and edge cases. If a prerequisite is missing, make it an explicit early lesson and explain the gap in foundationGap. Include useful memory tricks (mnemonics, patterns, visual hooks, chunking, or short rules) where they genuinely help, plus the best-practice method for doing the skill. Avoid filler and avoid making every lesson a quiz. Include a mixture of explanations, worked examples, guided practice, small checks for understanding, and recap/retrieval practice. Size the path to the deadline (tomorrow = 4-6 lessons; no rush = 10-14).'''
+          new_user = '''Design a personalized mastery roadmap in prerequisite order. ALWAYS teach essential foundations before advanced or specific material, even if the learner's goal sounds advanced. First identify the most valuable outcome hidden inside the goal and make it obvious in the title, overview, objectives, and first module. Break the roadmap into small daily missions that can be completed in 5-15 minutes, with a visible sense of progress and a practical win each day. The learner should always know: what I am learning, why it matters, what I need first, what I do next, and how I prove I can use it. Start with plain-language basics, key vocabulary, and the mental model; then build one concept at a time; then worked examples and real-world use; only later move to advanced techniques and edge cases. If a prerequisite is missing, make it an explicit early lesson and explain the gap in foundationGap. Include useful memory tricks only when they genuinely help. Every lesson should have a teach -> show -> retrieve -> practice -> feedback -> apply rhythm, with short checks after teaching rather than quiz-first content. Add a concrete real-world task whenever the topic supports one. Size the path to the deadline, but favor a 7-30 day habit-building roadmap for longer goals. Avoid vague lesson titles such as 'Introduction' when a specific outcome can be named.'''
+          text = text.replace(old_user, new_user)
+          ai.write_text(text)
+
+          intake = root / 'ui/screens/GoalIntakeScreen.kt'
+          text = intake.read_text()
+          text = text.replace('Text("Your next skill starts here.", style = MaterialTheme.typography.headlineMedium, color = c.ink)', 'Text("Turn a goal into a skill you can actually use.", style = MaterialTheme.typography.headlineMedium, color = c.ink)')
+          text = text.replace('"Tell us what you want to learn. We\'ll build a step-by-step path that starts with the basics and grows with you."', '"We\'ll turn your goal into short daily missions, a clear roadmap, practice, and measurable progress."')
+          text = text.replace('"I want to learn…"', '"What do you want to be able to do?"')
+          text = text.replace('"We\'ll teach the fundamentals first, show worked examples, and add memory tricks when they help."', '"You\'ll get the foundations first, then short lessons, examples, practice, feedback, and a real-world application."')
+          text = text.replace('Text("Personalize your path", style = MaterialTheme.typography.titleMedium, color = c.ink)', 'Text("Tune your roadmap", style = MaterialTheme.typography.titleMedium, color = c.ink)')
+          text = text.replace('"Optional · choose your pace and starting level"', '"Optional · set your starting point and daily commitment"')
+          text = text.replace('Text("Already know something? Tick it and I\'ll skip it.", style = MaterialTheme.typography.bodyMedium, color = c.inkSoft)', 'Text("Know a lesson already? Skip it. I\'ll keep the roadmap focused.", style = MaterialTheme.typography.bodyMedium, color = c.inkSoft)')
+          intake.write_text(text)
+
+          home = root / 'ui/screens/HomeScreen.kt'
+          text = home.read_text()
+          text = text.replace('"What do you want to learn?"', '"What do you want to be able to do?"')
+          text = text.replace('"Type any goal and get a personal path in seconds."', '"Turn a goal into a focused roadmap with daily wins, practice, and proof you can use the skill."')
+          text = text.replace('"Build a path"', '"Build my roadmap"')
+          text = text.replace('Text("Daily challenge", style = MaterialTheme.typography.titleLarge, color = c.ink)', 'Text("Today\'s 5-minute win", style = MaterialTheme.typography.titleLarge, color = c.ink)')
+          text = text.replace('Text(if (doneToday) "${results.count { it }} of 3 correct · done" else "3 questions · +50 XP", style = MaterialTheme.typography.bodyMedium, color = c.inkSoft)', 'Text(if (doneToday) "${results.count { it }} of 3 correct · mission complete" else "Learn · practice · prove it · +50 XP", style = MaterialTheme.typography.bodyMedium, color = c.inkSoft)')
+          home.write_text(text)
+
+          # Make sure the critical pivot strings actually landed.
+          checks = [
+              (ai, 'outcome-driven roadmap'),
+              (intake, 'short daily missions'),
+              (home, 'What do you want to be able to do?'),
+          ]
+          for p, needle in checks:
+              if needle not in p.read_text():
+                  raise SystemExit(f'Pivot patch did not land in {p}: {needle}')
+
+      - name: Commit product changes
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add android-learn-anything/app/src/main/java/com/rork/learnanything/data/Ai.kt \
+                  android-learn-anything/app/src/main/java/com/rork/learnanything/ui/screens/GoalIntakeScreen.kt \
+                  android-learn-anything/app/src/main/java/com/rork/learnanything/ui/screens/HomeScreen.kt
+          git diff --cached --quiet || git commit -m "Make learning product outcome-driven and micro-learning focused"
+          git push
