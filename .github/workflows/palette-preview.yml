@@ -1,0 +1,84 @@
+name: Palette preview build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build palette preview APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Apply palette and build-only fixes
+        shell: python
+        run: |
+          from pathlib import Path
+          root = Path('android-learn-anything/app/src/main/java/com/rork/learnanything')
+
+          ai = root / 'data/Ai.kt'
+          text = ai.read_text()
+          text = text.replace('): CourseDraft = = try {', '): CourseDraft = try {')
+          ai.write_text(text)
+
+          theme = root / 'ui/theme/Theme.kt'
+          text = theme.read_text()
+          replacements = {
+              'success = Color(0xFF16845B), successSoft = Color(0xFFE0F5EC),': 'success = Color(0xFF22C55E), successSoft = Color(0xFFDCFCE7),',
+              'success = Color(0xFF45C98D), successSoft = Color(0xFF123327),': 'success = Color(0xFF4ADE80), successSoft = Color(0xFF123A24),',
+              'amber = Color(0xFFD18A16), amberSoft = Color(0xFFFFF2D8),': 'amber = Color(0xFFF5B942), amberSoft = Color(0xFFFFF4CC),',
+              'amber = Color(0xFFF1B84B), amberSoft = Color(0xFF3A2D15),': 'amber = Color(0xFFF6C85F), amberSoft = Color(0xFF3B3015),',
+          }
+          for old, new in replacements.items():
+              text = text.replace(old, new)
+          theme.write_text(text)
+
+      - name: Configure Supabase app settings
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        shell: bash
+        working-directory: android-learn-anything
+        run: |
+          set +x
+          test -n "$SUPABASE_URL" || (echo "Missing SUPABASE_URL repository secret" && exit 1)
+          test -n "$SUPABASE_ANON_KEY" || (echo "Missing SUPABASE_ANON_KEY repository secret" && exit 1)
+          cat > app/src/main/java/com/rork/learnanything/Config.kt <<EOF
+          package com.rork.learnanything
+
+          object Config {
+              const val EXPO_PUBLIC_SUPABASE_URL: String = "$SUPABASE_URL"
+              const val EXPO_PUBLIC_SUPABASE_ANON_KEY: String = "$SUPABASE_ANON_KEY"
+              const val EXPO_PUBLIC_TOOLKIT_URL: String = ""
+          }
+          EOF
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build debug APK
+        working-directory: android-learn-anything
+        run: |
+          chmod +x ./gradlew
+          ./gradlew --no-daemon assembleDebug
+
+      - name: Upload palette preview APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: learn-anything-palette-preview
+          path: android-learn-anything/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 7
