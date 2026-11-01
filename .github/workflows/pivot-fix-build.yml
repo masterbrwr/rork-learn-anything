@@ -24,7 +24,6 @@ jobs:
           ai = root / 'data/Ai.kt'
           text = ai.read_text()
           text = text.replace('): CourseDraft = = try {', '): CourseDraft = try {')
-          text = text.replace('): CourseDraft = = try {', '): CourseDraft = try {')
           old = 'You are the curriculum designer for Learn Anything. Your job is to create real understanding and usable skills, not a list of topics or a test-prep treadmill. Build a carefully scaffolded path that starts with fundamentals and grows toward specific, advanced applications.'
           new = 'You are the curriculum designer for Learn Anything. Position every learning path as an outcome-driven roadmap, not an encyclopedia. The learner is paying for structure, momentum, accountability, practice, and measurable progress. Turn a broad goal into a concrete result the learner can achieve. Prefer short daily missions, usually 5-15 minutes, with a clear win at the end of each mission. Build from prerequisites to the first useful result, then progressively harder applications. Use retrieval, spaced review, interleaving, worked examples, feedback, and real-world transfer. Avoid filler and generic AI lectures.'
           text = text.replace(old, new)
@@ -64,7 +63,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add android-learn-anything/app/src/main/java/com/rork/learnanything/data/Ai.kt android-learn-anything/app/src/main/java/com/rork/learnanything/ui/screens/GoalIntakeScreen.kt android-learn-anything/app/src/main/java/com/rork/learn-anything/ui/screens/HomeScreen.kt
+          git add android-learn-anything/app/src/main/java/com/rork/learnanything/data/Ai.kt android-learn-anything/app/src/main/java/com/rork/learnanything/ui/screens/GoalIntakeScreen.kt android-learn-anything/app/src/main/java/com/rork/learnanything/ui/screens/HomeScreen.kt
           if git diff --cached --quiet; then echo "No source changes."; else git commit -m "Pivot learning experience toward outcomes and micro-learning"; git push; fi
 
       - name: Configure Supabase
