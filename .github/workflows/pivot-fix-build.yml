@@ -1,0 +1,105 @@
+name: Pivot fix and build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Repair and apply product pivot
+        shell: python
+        run: |
+          from pathlib import Path
+          root = Path('android-learn-anything/app/src/main/java/com/rork/learnanything')
+          ai = root / 'data/Ai.kt'
+          text = ai.read_text()
+          text = text.replace('): CourseDraft = = try {', '): CourseDraft = try {')
+          text = text.replace('): CourseDraft = = try {', '): CourseDraft = try {')
+          old = 'You are the curriculum designer for Learn Anything. Your job is to create real understanding and usable skills, not a list of topics or a test-prep treadmill. Build a carefully scaffolded path that starts with fundamentals and grows toward specific, advanced applications.'
+          new = 'You are the curriculum designer for Learn Anything. Position every learning path as an outcome-driven roadmap, not an encyclopedia. The learner is paying for structure, momentum, accountability, practice, and measurable progress. Turn a broad goal into a concrete result the learner can achieve. Prefer short daily missions, usually 5-15 minutes, with a clear win at the end of each mission. Build from prerequisites to the first useful result, then progressively harder applications. Use retrieval, spaced review, interleaving, worked examples, feedback, and real-world transfer. Avoid filler and generic AI lectures.'
+          text = text.replace(old, new)
+          old2 = 'Design a personalized path in prerequisite order. ALWAYS teach essential foundations before advanced or specific material, even if the learner\'s goal sounds advanced. Start with plain-language basics, key vocabulary, and the mental model; then build one concept at a time; then worked examples and real-world use; only later move to advanced techniques and edge cases. If a prerequisite is missing, make it an explicit early lesson and explain the gap in foundationGap. Include useful memory tricks (mnemonics, patterns, visual hooks, chunking, or short rules) where they genuinely help, plus the best-practice method for doing the skill. Avoid filler and avoid making every lesson a quiz. Include a mixture of explanations, worked examples, guided practice, small checks for understanding, and recap/retrieval practice. Size the path to the deadline (tomorrow = 4-6 lessons; no rush = 10-14).'
+          new2 = 'Design a personalized mastery roadmap in prerequisite order. ALWAYS teach essential foundations before advanced or specific material, even if the learner\'s goal sounds advanced. First identify the most valuable outcome hidden inside the goal and make it obvious in the title, overview, objectives, and first module. Break the roadmap into small daily missions that can be completed in 5-15 minutes, with a visible sense of progress and a practical win each day. The learner should always know what they are learning, why it matters, what they need first, what they do next, and how they prove they can use it. Start with plain-language basics, key vocabulary, and the mental model; then build one concept at a time; then worked examples and real-world use; only later move to advanced techniques and edge cases. If a prerequisite is missing, make it an explicit early lesson and explain the gap in foundationGap. Include useful memory tricks only when they genuinely help. Every lesson should have a teach -> show -> retrieve -> practice -> feedback -> apply rhythm, with short checks after teaching rather than quiz-first content. Add a concrete real-world task whenever the topic supports one. Favor a 7-30 day habit-building roadmap for longer goals. Avoid vague lesson titles when a specific outcome can be named.'
+          text = text.replace(old2, new2)
+          ai.write_text(text)
+
+          intake = root / 'ui/screens/GoalIntakeScreen.kt'
+          text = intake.read_text()
+          text = text.replace('Your next skill starts here.', 'Turn a goal into a skill you can actually use.')
+          text = text.replace("Tell us what you want to learn. We'll build a step-by-step path that starts with the basics and grows with you.", "We'll turn your goal into short daily missions, a clear roadmap, practice, and measurable progress.")
+          text = text.replace('I want to learn…', 'What do you want to be able to do?')
+          text = text.replace("We'll teach the fundamentals first, show worked examples, and add memory tricks when they help.", "You'll get the foundations first, then short lessons, examples, practice, feedback, and a real-world application.")
+          text = text.replace('Personalize your path', 'Tune your roadmap')
+          text = text.replace('Optional · choose your pace and starting level', 'Optional · set your starting point and daily commitment')
+          text = text.replace("Already know something? Tick it and I'll skip it.", "Know a lesson already? Skip it. I'll keep the roadmap focused.")
+          intake.write_text(text)
+
+          home = root / 'ui/screens/HomeScreen.kt'
+          text = home.read_text()
+          text = text.replace('What do you want to learn?', 'What do you want to be able to do?')
+          text = text.replace('Type any goal and get a personal path in seconds.', 'Turn a goal into a focused roadmap with daily wins, practice, and proof you can use the skill.')
+          text = text.replace('Build a path', 'Build my roadmap')
+          text = text.replace("Daily challenge", "Today's 5-minute win")
+          text = text.replace('3 questions · +50 XP', 'Learn · practice · prove it · +50 XP')
+          home.write_text(text)
+
+          if '): CourseDraft = = try {' in ai.read_text():
+              raise SystemExit('Malformed generateCourse declaration remains')
+          for p, needle in [(ai, 'outcome-driven roadmap'), (intake, 'short daily missions'), (home, 'What do you want to be able to do?')]:
+              if needle not in p.read_text():
+                  raise SystemExit(f'Pivot change missing: {p} -> {needle}')
+
+      - name: Commit source changes
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add android-learn-anything/app/src/main/java/com/rork/learnanything/data/Ai.kt android-learn-anything/app/src/main/java/com/rork/learnanything/ui/screens/GoalIntakeScreen.kt android-learn-anything/app/src/main/java/com/rork/learn-anything/ui/screens/HomeScreen.kt
+          if git diff --cached --quiet; then echo "No source changes."; else git commit -m "Pivot learning experience toward outcomes and micro-learning"; git push; fi
+
+      - name: Configure Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        working-directory: android-learn-anything
+        shell: bash
+        run: |
+          set +x
+          test -n "$SUPABASE_URL"
+          test -n "$SUPABASE_ANON_KEY"
+          cat > app/src/main/java/com/rork/learnanything/Config.kt <<EOF
+          package com.rork.learnanything
+          object Config {
+              const val EXPO_PUBLIC_SUPABASE_URL: String = "$SUPABASE_URL"
+              const val EXPO_PUBLIC_SUPABASE_ANON_KEY: String = "$SUPABASE_ANON_KEY"
+              const val EXPO_PUBLIC_TOOLKIT_URL: String = ""
+          }
+          EOF
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Compile and lint
+        working-directory: android-learn-anything
+        run: |
+          chmod +x ./gradlew
+          ./gradlew --no-daemon assembleDebug lintDebug
+      - name: Upload validated APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: learn-anything-outcome-pivot-apk
+          path: android-learn-anything/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 7
