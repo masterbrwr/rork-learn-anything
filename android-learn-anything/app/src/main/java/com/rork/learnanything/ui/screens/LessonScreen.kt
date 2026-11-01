@@ -11,14 +11,18 @@ import androidx.compose.material.icons.rounded.SkipNext
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.rork.learnanything.data.AppStore
 import com.rork.learnanything.data.Ai
 import com.rork.learnanything.data.LessonContent
+import com.rork.learnanything.data.LessonStep
+import com.rork.learnanything.data.MatchPair
 import com.rork.learnanything.ui.components.*
 import com.rork.learnanything.ui.navigation.Routes
 import com.rork.learnanything.ui.theme.LA
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
@@ -35,18 +39,44 @@ fun LessonScreen(nav: NavController, courseId: String, lessonId: String) {
     var menu by remember { mutableStateOf(false) }
     val startedAt = remember(lessonId) { System.currentTimeMillis() }
 
+    fun fallbackContent(): LessonContent {
+        val title = lesson?.title ?: "this topic"
+        val subject = course?.subject ?: "the subject"
+        return LessonContent(
+            summary = "A guided starter lesson for $title in $subject.",
+            keyPoints = listOf("Understand the core idea first.", "Connect the idea to an example.", "Retrieve the idea from memory before moving on."),
+            steps = listOf(
+                LessonStep(type = "concept", title = "Start with the big idea", body = "This lesson is about $title. First build a simple mental model of what the idea means and why it matters in $subject.", phase = "learn", concept = title),
+                LessonStep(type = "example", title = "Connect it to an example", body = "Think about a real situation where $title could be useful. Connect the new idea to something familiar.", phase = "learn", concept = title),
+                LessonStep(type = "concept", title = "Teach it back", body = "Explain $title in your own words as if you were teaching a beginner. If you get stuck, revisit the first step.", phase = "practice", concept = title),
+                LessonStep(type = "mcq", title = "Quick check", body = "What should you do first when learning a new concept?", options = listOf("Understand the core idea", "Memorize every detail", "Skip the foundations", "Only take a quiz"), answer = 0, explanation = "A clear mental model makes later details easier to understand and remember.", misconception = "Memorizing details before understanding the idea often creates fragile knowledge.", simpler = "Big picture first, details second.", hint = "Choose the option about understanding before memorizing.", phase = "quiz", concept = title),
+                LessonStep(type = "reveal", title = "Self-test", body = "Try to explain the lesson without looking back.", pairs = listOf(MatchPair("Why it matters", "It gives the idea a purpose"), MatchPair("Example", "Makes the idea concrete")), phase = "practice", concept = title),
+                LessonStep(type = "concept", title = "Apply it", body = "Identify one real situation where you could use $title. Connecting knowledge to action makes it more useful.", phase = "learn", concept = title)
+            )
+        )
+    }
+
     fun load() {
         if (course == null || lesson == null) return
         loading = true; error = null
         scope.launch {
-            runCatching { Ai.generateLesson(course, lesson, AppStore.learnerContext()) }
-                .onSuccess { gen ->
-                    if (gen.steps.isEmpty()) { error = "The lesson came back empty. Try again."; return@onSuccess }
-                    content = gen
-                    AppStore.mapLesson(courseId, lessonId) { it.copy(content = gen) }
-                    AppStore.track("lesson_generated", mapOf("lesson" to lesson.title))
-                }
-                .onFailure { AppStore.logError("generateLesson", it); error = it.message?.take(160) ?: "Check your connection and try again." }
+            var generated: LessonContent? = null
+            var lastFailure: Throwable? = null
+            repeat(2) { attempt ->
+                runCatching { Ai.generateLesson(course, lesson, AppStore.learnerContext()) }
+                    .onSuccess { gen -> if (gen.steps.isNotEmpty()) generated = gen }
+                    .onFailure { lastFailure = it }
+                if (generated == null && attempt == 0) delay(700)
+            }
+            val gen = generated ?: fallbackContent()
+            content = gen
+            AppStore.mapLesson(courseId, lessonId) { it.copy(content = gen) }
+            if (generated != null) {
+                AppStore.track("lesson_generated", mapOf("lesson" to lesson.title))
+            } else {
+                AppStore.logError("generateLesson_fallback", lastFailure ?: Exception("AI lesson generation failed"))
+                AppStore.track("lesson_fallback", mapOf("lesson" to lesson.title))
+            }
             loading = false
         }
     }
