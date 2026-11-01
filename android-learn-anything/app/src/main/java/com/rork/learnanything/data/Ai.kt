@@ -172,7 +172,7 @@ object Ai {
 
     private const val STEP_SCHEMA = """Each step object: {"type": one of "concept"|"example"|"reveal"|"mcq"|"truefalse"|"fill"|"match"|"order"|"estimate"|"sort"|"tapwords", "title": short (for tapwords: the instruction, e.g. \"Tap the two noble gases\"), "body": text (concept/example: 2-4 vivid sentences; questions: the question), "options": [4 choices for mcq; ["True","False"] for truefalse], "answer": index of correct option, "answerText": single word/short phrase for fill (use ____ in body), "pairs": [{"left","right"}] x4 for match, "items": correct ordered list of 3-5 for order; for tapwords the 1-3 exact single words from body to tap, "estimate": the learner slides to guess a number: body is the question, answerText the exact number only (digits), "min" and "max" the slider range, "unit" (e.g. \"%\", \"km\", \"years\"), "tolerance" the +/- error still counted correct, "sort": "options" 2-3 short group names and "pairs" 5-6 of {"left": item, "right": its group name exactly as in options}, "reveal": ungraded self-test flip cards: "pairs" 3-4 of {"left": term or question, "right": answer under 14 words}, "tapwords": body is one or two natural sentences (under 30 words) containing the target words, "explanation": why the answer is right, "misconception": the likely misunderstanding behind a wrong answer, "simpler": a simpler analogy or example, "hint": a nudge without giving it away, "concept": the specific concept tested (2-4 words), "difficulty": 1-5, "visual": optional {"type": "flow"|"cycle"|"timeline"|"bars"|"graph"|"compare"|"formula", "title", "caption", "formula" (formula type only), "items":[{"label","value" (number for bars/graph),"detail"}]} }"""
 
-    suspend fun generateCourse(goal: String, level: String, deadline: String, minutesPerDay: Int, style: String, learner: String): CourseDraft =
+    suspend fun generateCourse(goal: String, level: String, deadline: String, minutesPerDay: Int, style: String, learner: String): CourseDraft = = try {
         structured(
             "You are the curriculum designer for Learn Anything. Your job is to create real understanding and usable skills, not a list of topics or a test-prep treadmill. Build a carefully scaffolded path that starts with fundamentals and grows toward specific, advanced applications.",
             """Learner goal: "$goal"
@@ -182,6 +182,30 @@ Design a personalized path in prerequisite order. ALWAYS teach essential foundat
 JSON schema: {"title": concise path title, "subject": broad subject (e.g. Biology), "overview": 1-2 sentences, "level": "Beginner"|"Intermediate"|"Advanced", "objectives": [3-5], "prerequisites": [1-3 concepts that come before], "nextSteps": [2-3 topics to learn after], "foundationGap": "" or one sentence, "modules": [{"title", "lessons": [{"title": specific, "minutes": 5-15}]}] (2-4 modules)}""",
             CourseDraft.serializer(), 2500,
         )
+    } catch (e: Exception) {
+        val subject = goal.trim().split(" ").firstOrNull()?.replaceFirstChar { it.uppercase() } ?: "General"
+        val pace = minutesPerDay.coerceIn(10, 60)
+        CourseDraft(
+            title = "Getting Started: $goal",
+            subject = subject,
+            overview = "A starter path built from the fundamentals so you can begin learning while the AI service reconnects.",
+            level = level,
+            objectives = listOf("Understand the essential foundations", "Practice the core ideas", "Apply what you learned to a simple real-world task"),
+            prerequisites = emptyList(),
+            nextSteps = listOf("Build on the fundamentals", "Practice with harder examples"),
+            foundationGap = "Start with the fundamentals before moving into more specific applications.",
+            modules = listOf(
+                DraftModule("Foundations", listOf(
+                    DraftLesson("What is $goal?", (pace * 0.20).toInt().coerceIn(5, 15)),
+                    DraftLesson("Key terms and core ideas", (pace * 0.25).toInt().coerceIn(5, 15)),
+                )),
+                DraftModule("Build the skill", listOf(
+                    DraftLesson("Worked example", (pace * 0.25).toInt().coerceIn(5, 15)),
+                    DraftLesson("Guided practice", (pace * 0.30).toInt().coerceIn(5, 15)),
+                )),
+            ),
+        )
+    }
 
     suspend fun generateLesson(course: Course, lesson: LessonRef, learner: String): LessonContent =
         structured(
