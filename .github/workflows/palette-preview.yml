@@ -39,6 +39,28 @@ jobs:
               text = text.replace(old, new)
           theme.write_text(text)
 
+          files = {
+              root / 'ui/components/Chrome.kt': ('import androidx.compose.ui.Modifier\n', 'import androidx.compose.ui.Modifier\nimport androidx.compose.ui.unit.dp\n'),
+              root / 'ui/screens/LessonScreen.kt': ('import androidx.compose.ui.Modifier\n', 'import androidx.compose.ui.Modifier\nimport androidx.compose.ui.unit.dp\n'),
+          }
+          for path, (old, new) in files.items():
+              text = path.read_text()
+              if 'import androidx.compose.ui.unit.dp' not in text:
+                  if old not in text:
+                      raise SystemExit(f'Missing expected Modifier import in {path}')
+                  text = text.replace(old, new, 1)
+              path.write_text(text)
+
+          nav = root / 'ui/navigation/AppNavigation.kt'
+          text = nav.read_text()
+          text = text.replace('import androidx.compose.ui.clip\n', 'import androidx.compose.ui.draw.clip\n')
+          if 'import androidx.compose.ui.draw.clip\n' not in text:
+              marker = 'import androidx.compose.ui.Modifier\n'
+              if marker not in text:
+                  raise SystemExit('Missing expected Modifier import in AppNavigation.kt')
+              text = text.replace(marker, marker + 'import androidx.compose.ui.draw.clip\n', 1)
+          nav.write_text(text)
+
       - name: Configure Supabase app settings
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
