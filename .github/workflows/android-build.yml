@@ -40,6 +40,21 @@ jobs:
           if old in text and 'LearningEngine.GUIDANCE' not in text:
               ai.write_text(text.replace(old, new, 1))
 
+          # Make path creation resilient: if the AI backend is temporarily unavailable,
+          # generate a clearly labeled starter curriculum locally instead of trapping the
+          # learner on an error screen. The real AI path is still attempted first.
+          import re
+          text = ai.read_text()
+          pattern = r'(    suspend fun generateCourse\(goal: String, level: String, deadline: String, minutesPerDay: Int, style: String, learner: String\): CourseDraft =)\n        structured\('
+          replacement = r'''\1 = try {\n        structured('''
+          text, n = re.subn(pattern, replacement, text, count=1)
+          if n:
+              marker = '            CourseDraft.serializer(), 2500,\n        )\n\n    suspend fun generateLesson'
+              fallback = '''            CourseDraft.serializer(), 2500,\n        )\n    } catch (e: Exception) {\n        val subject = goal.trim().split(" ").firstOrNull()?.replaceFirstChar { it.uppercase() } ?: "General"\n        val pace = minutesPerDay.coerceIn(10, 60)\n        CourseDraft(\n            title = "Getting Started: $goal",\n            subject = subject,\n            overview = "A starter path built from the fundamentals so you can begin learning while the AI service reconnects.",\n            level = level,\n            objectives = listOf("Understand the essential foundations", "Practice the core ideas", "Apply what you learned to a simple real-world task"),\n            prerequisites = emptyList(),\n            nextSteps = listOf("Build on the fundamentals", "Practice with harder examples"),\n            foundationGap = "Start with the fundamentals before moving into more specific applications.",\n            modules = listOf(\n                DraftModule("Foundations", listOf(\n                    DraftLesson("What is $goal?", (pace * 0.20).toInt().coerceIn(5, 15)),\n                    DraftLesson("Key terms and core ideas", (pace * 0.25).toInt().coerceIn(5, 15)),\n                )),\n                DraftModule("Build the skill", listOf(\n                    DraftLesson("Worked example", (pace * 0.25).toInt().coerceIn(5, 15)),\n                    DraftLesson("Guided practice", (pace * 0.30).toInt().coerceIn(5, 15)),\n                )),\n            ),\n        )\n    }\n\n    suspend fun generateLesson'''
+              if marker in text and 'A starter path built from the fundamentals' not in text:
+                  text = text.replace(marker, fallback, 1)
+              ai.write_text(text)
+
           intake = root / 'ui/screens/GoalIntakeScreen.kt'
           text = intake.read_text()
           if 'private val LANGUAGES = listOf(' not in text:
