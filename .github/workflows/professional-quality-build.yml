@@ -1,0 +1,152 @@
+name: Professional quality build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  quality-build:
+    name: Build, lint, and validate Learn Anything
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply permanent lesson reliability fixes
+        shell: python
+        run: |
+          from pathlib import Path
+
+          root = Path('android-learn-anything/app/src/main/java/com/rork/learnanything')
+          ai = root / 'data/Ai.kt'
+          text = ai.read_text()
+          text = text.replace('): CourseDraft = = try {', '): CourseDraft = try {', 1)
+          ai.write_text(text)
+
+          lesson = root / 'ui/screens/LessonScreen.kt'
+          text = lesson.read_text()
+
+          helper = '''    fun localFallback(): LessonContent {
+        val topic = lesson?.title ?: "this topic"
+        val subject = course?.subject ?: "the subject"
+        return LessonContent(
+            summary = "Learn the foundation of $topic, practice it, and connect it to a real example.",
+            keyPoints = listOf(
+                "$topic has a core idea you can understand before memorizing details.",
+                "Good learning starts with the simplest useful mental model.",
+                "Practice immediately after learning makes the idea easier to retrieve later.",
+                "You can build from this foundation into harder applications."
+            ),
+            steps = listOf(
+                LessonStep("concept", "Why this matters", "Before learning $topic, understand what problem it helps you solve in $subject and what you should be able to do afterward.", concept = topic, phase = "learn"),
+                LessonStep("concept", "Start with the mental model", "Think of $topic as a system with a few important parts. Learn what each part does before worrying about exceptions or advanced details.", concept = topic, phase = "learn"),
+                LessonStep("example", "See a simple example", "Start with one concrete example of $topic. Identify what is happening, what changes, and what stays the same. Then explain the example in your own words.", concept = topic, phase = "learn"),
+                LessonStep("reveal", "Quick recall", "Without looking back, name the main idea of $topic and one reason it matters.", pairs = listOf(MatchPair("Main idea", "Explain the basic mechanism in your own words"), MatchPair("Why it matters", "Connect the idea to a useful outcome"), MatchPair("Next step", "Practice the idea with a new example")), concept = topic, phase = "practice"),
+                LessonStep("mcq", "Check the foundation", "Which approach is best when learning a new concept?", options = listOf("Memorize every detail first", "Understand the core idea, then practice", "Skip examples and take a test", "Only reread the definition"), answer = 1, explanation = "Understanding the core idea first gives you a model you can use when the examples change.", misconception = "Memorizing isolated facts is not the same as understanding how the parts connect.", simpler = "Learn the map before trying to drive the whole route.", hint = "Choose the option that builds understanding before testing.", concept = "learning sequence", difficulty = 1, phase = "practice"),
+                LessonStep("example", "Apply it", "Take a new situation involving $topic. First predict what should happen, then explain which part of the mental model supports your prediction.", concept = topic, phase = "practice"),
+                LessonStep("truefalse", "Retrieval check", "A strong learner should be able to explain the main idea without copying the wording from the lesson.", options = listOf("True", "False"), answer = 0, explanation = "Retrieving the idea in your own words is a stronger sign of understanding than recognizing the same wording.", misconception = "Recognizing a definition can feel like knowing it, even when you cannot reproduce or apply it.", simpler = "If you can explain it without looking, you probably understand it.", hint = "Think about whether you can retrieve the idea independently.", concept = "retrieval practice", difficulty = 1, phase = "practice"),
+                LessonStep("concept", "Best-practice tip", "After this lesson, revisit $topic later instead of cramming it once. Mix short retrieval checks with new examples so the idea becomes usable.", concept = topic, phase = "learn"),
+                LessonStep("concept", "Recap and next step", "You now have the foundation for $topic. Try one real-world example, explain why it works, and then continue to the next lesson when you can do that without looking.", concept = topic, phase = "learn")
+            )
+        )
+    }
+
+'''
+          if 'fun localFallback(): LessonContent' not in text:
+              marker = '    fun load() {'
+              if marker not in text:
+                  raise SystemExit('LessonScreen load marker not found')
+              text = text.replace(marker, helper + marker, 1)
+
+          old_failure = '                .onFailure { AppStore.logError("generateLesson", it); error = it.message?.take(160) ?: "Check your connection and try again." }'
+          new_failure = '''                .onFailure {
+                    AppStore.logError("generateLesson", it)
+                    content = localFallback()
+                    AppStore.mapLesson(courseId, lessonId) { it.copy(content = content) }
+                    AppStore.track("lesson_fallback_used", mapOf("lesson" to lesson.title))
+                }'''
+          if old_failure not in text:
+              raise SystemExit('LessonScreen failure handler not found')
+          text = text.replace(old_failure, new_failure, 1)
+          if 'import androidx.compose.ui.unit.dp' not in text:
+              text = text.replace('import androidx.compose.ui.Modifier\n', 'import androidx.compose.ui.Modifier\nimport androidx.compose.ui.unit.dp\n', 1)
+          lesson.write_text(text)
+
+      - name: Validate source invariants
+        shell: bash
+        run: |
+          set -euo pipefail
+          ! grep -n 'CourseDraft = = try' android-learn-anything/app/src/main/java/com/rork/learnanything/data/Ai.kt
+          grep -q 'fun localFallback(): LessonContent' android-learn-anything/app/src/main/java/com/rork/learnanything/ui/screens/LessonScreen.kt
+          grep -q 'lesson_fallback_used' android-learn-anything/app/src/main/java/com/rork/learnanything/ui/screens/LessonScreen.kt
+
+      - name: Commit permanent reliability fixes
+        if: ${{ !contains(github.event.head_commit.message, '[lesson-reliability]') }}
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add android-learn-anything/app/src/main/java/com/rork/learnanything/data/Ai.kt android-learn-anything/app/src/main/java/com/rork/learnanything/ui/screens/LessonScreen.kt
+          if git diff --cached --quiet; then
+            echo "Reliability fixes already present."
+          else
+            git commit -m "Make lesson generation resilient [lesson-reliability]"
+            git push
+          fi
+
+      - name: Configure Supabase app settings
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        shell: bash
+        working-directory: android-learn-anything
+        run: |
+          set +x
+          test -n "$SUPABASE_URL"
+          test -n "$SUPABASE_ANON_KEY"
+          cat > app/src/main/java/com/rork/learnanything/Config.kt <<EOF
+          package com.rork.learnanything
+          object Config {
+              const val EXPO_PUBLIC_SUPABASE_URL: String = "$SUPABASE_URL"
+              const val EXPO_PUBLIC_SUPABASE_ANON_KEY: String = "$SUPABASE_ANON_KEY"
+              const val EXPO_PUBLIC_TOOLKIT_URL: String = ""
+          }
+          EOF
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Compile and lint
+        working-directory: android-learn-anything
+        run: |
+          chmod +x ./gradlew
+          ./gradlew --no-daemon assembleDebug lintDebug
+
+      - name: Verify APK metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="android-learn-anything/app/build/outputs/apk/debug/app-debug.apk"
+          test -s "$APK"
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | grep -q "package: name='com.rork.learnanything'"
+          stat -c '%n %s bytes' "$APK"
+
+      - name: Upload professional debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: learn-anything-professional-debug-apk
+          path: android-learn-anything/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7
