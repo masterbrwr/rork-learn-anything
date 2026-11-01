@@ -48,7 +48,6 @@ jobs:
                       text = text.replace(marker, marker + 'import androidx.compose.ui.unit.dp\\n', 1)
               p.write_text(text)
 
-          # Fail early on the exact malformed declaration that previously broke compilation.
           if '): CourseDraft = = try {' in ai.read_text():
               raise SystemExit('Malformed generateCourse declaration still present')
 
