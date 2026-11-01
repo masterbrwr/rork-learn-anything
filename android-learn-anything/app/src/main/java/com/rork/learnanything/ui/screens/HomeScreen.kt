@@ -129,7 +129,7 @@ fun HomeScreen(nav: NavController) {
                 SparkleMark(Modifier.size(22.dp), c.cobalt)
                 Spacer(Modifier.width(12.dp))
                 Box(Modifier.weight(1f).padding(vertical = 12.dp)) {
-                    if (query.isEmpty()) Text("What do you want to learn?", color = c.inkFaint, style = MaterialTheme.typography.bodyLarge)
+                    if (query.isEmpty()) Text("What do you want to be able to do?", color = c.inkFaint, style = MaterialTheme.typography.bodyLarge)
                     BasicTextField(
                         value = query, onValueChange = { query = it }, singleLine = true,
                         textStyle = MaterialTheme.typography.bodyLarge.copy(color = c.ink),
@@ -224,9 +224,9 @@ private fun HeroCard(nav: NavController) {
             Column {
                 Text(if (course == null) "Start something new" else "You finished ${course.title}", style = MaterialTheme.typography.headlineMedium, color = c.onHero)
                 Spacer(Modifier.height(6.dp))
-                Text("Type any goal and get a personal path in seconds.", color = c.onHero.copy(alpha = 0.75f), style = MaterialTheme.typography.bodyMedium)
+                Text("Turn a goal into a focused roadmap with daily wins, practice, and proof you can use the skill.", color = c.onHero.copy(alpha = 0.75f), style = MaterialTheme.typography.bodyMedium)
                 Spacer(Modifier.height(18.dp))
-                PrimaryButton("Build a path", { nav.navigate(Routes.intake()) }, icon = Icons.AutoMirrored.Rounded.ArrowForward)
+                PrimaryButton("Build my roadmap", { nav.navigate(Routes.intake()) }, icon = Icons.AutoMirrored.Rounded.ArrowForward)
             }
         } else {
             val lesson = course.currentLesson!!
@@ -266,8 +266,8 @@ private fun DailyChallengeCard(nav: NavController) {
             }
             Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f)) {
-                Text("Daily challenge", style = MaterialTheme.typography.titleLarge, color = c.ink)
-                Text(if (doneToday) "${results.count { it }} of 3 correct · done" else "3 questions · +50 XP", style = MaterialTheme.typography.bodyMedium, color = c.inkSoft)
+                Text("Today's 5-minute win", style = MaterialTheme.typography.titleLarge, color = c.ink)
+                Text(if (doneToday) "${results.count { it }} of 3 correct · mission complete" else "Learn · practice · prove it · +50 XP", style = MaterialTheme.typography.bodyMedium, color = c.inkSoft)
                 Spacer(Modifier.height(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     repeat(3) { i ->

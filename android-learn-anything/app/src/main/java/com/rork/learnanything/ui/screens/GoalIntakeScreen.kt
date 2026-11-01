@@ -135,22 +135,22 @@ fun GoalIntakeScreen(nav: NavController, initialGoal: String) {
                 else -> Column(Modifier.fillMaxSize()) {
                     Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp)) {
                         Spacer(Modifier.height(8.dp))
-                        Text("Your next skill starts here.", style = MaterialTheme.typography.headlineMedium, color = c.ink)
+                        Text("Turn a goal into a skill you can actually use.", style = MaterialTheme.typography.headlineMedium, color = c.ink)
                         Spacer(Modifier.height(6.dp))
                         Text(
-                            "Tell us what you want to learn. We'll build a step-by-step path that starts with the basics and grows with you.",
+                            "We'll turn your goal into short daily missions, a clear roadmap, practice, and measurable progress.",
                             style = MaterialTheme.typography.bodyLarge, color = c.inkSoft,
                         )
                         Spacer(Modifier.height(18.dp))
                         OutlinedTextField(
                             value = goal, onValueChange = { goal = it.take(160) }, modifier = Modifier.fillMaxWidth(),
                             placeholder = { Text("e.g. understand car engines, learn algebra") },
-                            label = { Text("I want to learn…") },
+                            label = { Text("What do you want to be able to do?") },
                             shape = RoundedCornerShape(18.dp), minLines = 2, maxLines = 3,
                         )
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            "We'll teach the fundamentals first, show worked examples, and add memory tricks when they help.",
+                            "You'll get the foundations first, then short lessons, examples, practice, feedback, and a real-world application.",
                             style = MaterialTheme.typography.bodyMedium, color = c.inkSoft,
                         )
                         if (atLimit) {
@@ -173,9 +173,9 @@ fun GoalIntakeScreen(nav: NavController, initialGoal: String) {
                                 ) { Icon(Icons.Rounded.Tune, null, tint = c.cobalt) }
                                 Spacer(Modifier.width(12.dp))
                                 Column(Modifier.weight(1f)) {
-                                    Text("Personalize your path", style = MaterialTheme.typography.titleMedium, color = c.ink)
+                                    Text("Tune your roadmap", style = MaterialTheme.typography.titleMedium, color = c.ink)
                                     Text(
-                                        if (showPreferences) "Adjust your level, pace and learning style" else "Optional · choose your pace and starting level",
+                                        if (showPreferences) "Adjust your level, pace and learning style" else "Optional · set your starting point and daily commitment",
                                         style = MaterialTheme.typography.bodySmall, color = c.inkSoft,
                                     )
                                 }
@@ -268,7 +268,7 @@ private fun PathPreview(d: CourseDraft, goal: String, known: MutableList<String>
                 }
             }
             Spacer(Modifier.height(20.dp))
-            Text("Already know something? Tick it and I'll skip it.", style = MaterialTheme.typography.bodyMedium, color = c.inkSoft)
+            Text("Know a lesson already? Skip it. I'll keep the roadmap focused.", style = MaterialTheme.typography.bodyMedium, color = c.inkSoft)
             d.modules.forEachIndexed { mi, m ->
                 Spacer(Modifier.height(16.dp))
                 Text("MODULE ${mi + 1}", style = MaterialTheme.typography.labelSmall, color = c.coral, fontWeight = FontWeight.Bold)
