@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   build:
-    name: Build Learn Anything APK
+    name: Build Learn Anything APK + AAB
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -149,3 +149,53 @@ jobs:
           path: android-learn-anything/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 7
+
+      - name: Prepare Android upload keystore
+        id: signing
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        shell: bash
+        run: |
+          set +x
+          if [[ -z "$ANDROID_KEYSTORE_BASE64" || -z "$ANDROID_KEYSTORE_PASSWORD" || -z "$ANDROID_KEY_ALIAS" || -z "$ANDROID_KEY_PASSWORD" ]]; then
+            echo "Production signing secrets are not configured yet. Building a validation AAB without a signing key."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/learn-anything-upload.jks"
+          test -s "$RUNNER_TEMP/learn-anything-upload.jks"
+          echo "configured=true" >> "$GITHUB_OUTPUT"
+
+      - name: Build release AAB
+        working-directory: android-learn-anything
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/learn-anything-upload.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [[ "${{ steps.signing.outputs.configured }}" == "true" ]]; then
+            ./gradlew --no-daemon bundleRelease
+          else
+            ./gradlew --no-daemon bundleRelease
+          fi
+
+      - name: Upload release AAB
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: learn-anything-release-aab
+          path: android-learn-anything/app/build/outputs/bundle/release/*.aab
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Fail production release if signing is not configured
+        if: success() && steps.signing.outputs.configured != 'true'
+        shell: bash
+        run: |
+          echo "AAB validation succeeded, but this artifact is not ready for Google Play production upload."
+          echo "Add the four Android signing secrets, then rerun the workflow to produce a signed AAB."
+          exit 1
