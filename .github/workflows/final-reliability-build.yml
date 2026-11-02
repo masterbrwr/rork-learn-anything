@@ -57,9 +57,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add android-learn-anything/app/src/main/java/com/rork/learnanything/data/Ai.kt \
-                  android-learn-anything/app/src/main/java/com/rork/learn-anything/ui/navigation/AppNavigation.kt \
-                  android-learn-anything/app/src/main/java/com/rork/learn-anything/ui/components/Chrome.kt \
-                  android-learn-anything/app/src/main/java/com/rork/learn-anything/ui/screens/LessonScreen.kt
+                  android-learn-anything/app/src/main/java/com/rork/learnanything/ui/navigation/AppNavigation.kt \
+                  android-learn-anything/app/src/main/java/com/rork/learnanything/ui/components/Chrome.kt \
+                  android-learn-anything/app/src/main/java/com/rork/learnanything/ui/screens/LessonScreen.kt
           if git diff --cached --quiet; then
             echo "No permanent reliability changes needed."
           else
