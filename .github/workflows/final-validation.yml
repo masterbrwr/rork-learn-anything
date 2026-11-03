@@ -75,3 +75,5 @@ jobs:
           path: android-learn-anything/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 7
+
+# Triggered after restoring the full navigation source and validating imports.
