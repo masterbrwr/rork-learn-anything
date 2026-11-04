@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.automirrored.rounded.MenuBook
 import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.FolderOpen
 import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
@@ -87,7 +88,8 @@ fun AppNavigation() {
 
     val tabs = listOf(
         Tab(Routes.HOME, "Home", Icons.Outlined.Home, Icons.Rounded.Home),
-        Tab(Routes.PATHS, "Paths", Icons.AutoMirrored.Outlined.MenuBook, Icons.AutoMirrored.Rounded.MenuBook),
+        Tab(Routes.PATHS, "Courses", Icons.AutoMirrored.Outlined.MenuBook, Icons.AutoMirrored.Rounded.MenuBook),
+        Tab(Routes.MATERIALS, "Materials", Icons.Rounded.FolderOpen, Icons.Rounded.FolderOpen),
         Tab(Routes.TUTOR, "Tutor", Icons.Rounded.AutoAwesome, Icons.Rounded.AutoAwesome),
         Tab(Routes.STUDY, "Study", Icons.Outlined.BarChart, Icons.Rounded.BarChart),
         Tab(Routes.PROFILE, "Profile", Icons.Outlined.Person, Icons.Rounded.Person),
@@ -152,6 +154,7 @@ fun AppNavigation() {
                 composable(Routes.ONBOARDING) { OnboardingScreen(nav) }
                 composable(Routes.HOME) { HomeScreen(nav) }
                 composable(Routes.PATHS) { PathsScreen(nav) }
+                composable(Routes.MATERIALS) { MaterialsScreen(nav) }
                 composable(Routes.TUTOR) { TutorScreen(nav) }
                 composable(Routes.STUDY) { StudyScreen(nav) }
                 composable(Routes.PROFILE) { ProfileScreen(nav) }
