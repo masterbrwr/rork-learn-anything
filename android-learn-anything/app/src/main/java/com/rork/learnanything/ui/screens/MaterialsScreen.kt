@@ -173,7 +173,7 @@ fun MaterialsScreen(nav: NavController) {
                 imported.onSuccess { text ->
                     source = text
                     if (title.isBlank()) title = uri.lastPathSegment?.substringAfterLast('/')?.substringBeforeLast('.') ?: "Course material"
-                    status = if (text.isBlank()) "No selectable text was found. Scanned/photo PDFs need OCR and aren't supported yet." else "Material imported. Review it before generating study tools."
+                    status = if (text.isBlank()) "No readable text was found. Try a clearer image or a text-based document." else "Material imported. Review it before generating study tools."
                 }.onFailure { error ->
                     status = error.message ?: "Couldn't read that file. Try a PDF, DOCX, PPTX, image, .txt or .md file."
                 }
@@ -195,7 +195,7 @@ fun MaterialsScreen(nav: NavController) {
                     Text("Import course text", style = MaterialTheme.typography.titleMedium, color = c.ink)
                 }
                 Spacer(Modifier.height(8.dp))
-                Text("Supports text-based PDF, Word (.docx), PowerPoint (.pptx), .txt and .md files, plus pasted text. Scanned PDFs, handwriting, Google Docs and YouTube import are not enabled yet. Imports are limited to 8,000 characters; PDFs are limited to 50 pages.", style = MaterialTheme.typography.bodySmall, color = c.inkSoft)
+                Text("Supports text-based PDF, Word (.docx), PowerPoint (.pptx), .txt and .md files, plus pasted text. Handwriting recognition, Google Docs and YouTube import are not enabled yet. Image OCR is on-device; scanned PDFs are limited to 10 OCR pages. Imports are limited to 8,000 characters and PDFs to 50 pages.", style = MaterialTheme.typography.bodySmall, color = c.inkSoft)
                 Spacer(Modifier.height(12.dp))
                 OutlinedButton(onClick = { picker.launch(arrayOf("application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.openxmlformats-officedocument.presentationml.presentation", "text/plain", "text/markdown", "text/*", "image/*")) }, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Rounded.Description, null); Spacer(Modifier.width(8.dp)); Text("Choose a course file")
