@@ -29,7 +29,7 @@ import kotlinx.coroutines.launch
 fun QuizScreen(nav: NavController, mode: String, initialTopic: String, examId: String) {
     val c = LA.colors
     val scope = rememberCoroutineScope()
-    val st = AppStore.state.value
+    val st by AppStore.state.collectAsState()
     val exam = st.exams.firstOrNull { it.id == examId }
     val autoTopic = when (mode) {
         "challenge" -> st.courses.firstOrNull { it.id == st.activeCourseId }?.let { co -> co.allLessons.filter { it.status == "done" }.lastOrNull()?.title?.let { "${co.title}: $it" } ?: co.title } ?: st.profile.interests.firstOrNull() ?: "general knowledge"
@@ -53,7 +53,7 @@ fun QuizScreen(nav: NavController, mode: String, initialTopic: String, examId: S
         error = null; questions = null
         scope.launch {
             val focus = when (mode) {
-                "mistakes" -> "Target these misunderstandings: " + AppStore.state.value.mistakes.filter { !it.resolved }.takeLast(6).joinToString("; ") { "${it.concept} (answered ${it.yourAnswer} instead of ${it.correctAnswer})" }
+                "mistakes" -> "Target these misunderstandings: " + st.mistakes.filter { !it.resolved }.takeLast(6).joinToString("; ") { "${it.concept} (answered ${it.yourAnswer} instead of ${it.correctAnswer})" }
                 "mock" -> "Exam-style, mixed difficulty, cover the breadth of the topics." + (exam?.keyConcepts?.takeIf { it.isNotEmpty() }?.let { " Key concepts: ${it.joinToString()}" } ?: "")
                 "challenge" -> "A fun, quick daily challenge. Mix recall and application."
                 else -> ""
