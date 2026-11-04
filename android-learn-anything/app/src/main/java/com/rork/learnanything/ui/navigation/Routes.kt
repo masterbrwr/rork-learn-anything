@@ -5,6 +5,7 @@ import android.net.Uri
 object Routes {
     const val HOME = "home"
     const val PATHS = "paths"
+    const val MATERIALS = "materials"
     const val TUTOR = "tutor"
     const val STUDY = "study"
     const val PROFILE = "profile"
@@ -14,7 +15,7 @@ object Routes {
     const val MISTAKES = "mistakes"
     const val PRICING = "pricing"
 
-    val TABS = listOf(HOME, PATHS, TUTOR, STUDY, PROFILE)
+    val TABS = listOf(HOME, PATHS, MATERIALS, TUTOR, STUDY, PROFILE)
 
     private fun e(s: String) = Uri.encode(s)
 
