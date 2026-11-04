@@ -192,7 +192,7 @@ fun MaterialsScreen(nav: NavController) {
                 Row {
                     Icon(Icons.Rounded.UploadFile, null, tint = c.cobalt)
                     Spacer(Modifier.width(10.dp))
-                    Text("Import course text", style = MaterialTheme.typography.titleMedium, color = c.ink)
+                    Text("Import course materials", style = MaterialTheme.typography.titleMedium, color = c.ink)
                 }
                 Spacer(Modifier.height(8.dp))
                 Text("Supports text-based PDF, Word (.docx), PowerPoint (.pptx), .txt and .md files, plus pasted text. Handwriting recognition, Google Docs and YouTube import are not enabled yet. Image OCR is on-device; scanned PDFs are limited to 10 OCR pages. Imports are limited to 8,000 characters and PDFs to 50 pages.", style = MaterialTheme.typography.bodySmall, color = c.inkSoft)
@@ -239,7 +239,7 @@ fun MaterialsScreen(nav: NavController) {
                     try {
                         val subject = title.ifBlank { "Course material" }
                         val notes = Ai.notesAction("summarize", source)
-                        AppStore.saveNote(Note(id = com.rork.learnanything.data.newId(), title = subject, body = notes, subject = subject))
+                        AppStore.saveNote(Note(id = com.rork.learnanything.data.newId(), title = "$subject · Study kit", body = "$notes\\n\\n--- Original course material ---\\n$source", subject = subject))
                         var cardMessage = ""
                         if (makeCards) {
                             val payload = Ai.flashcards(source, 12)
