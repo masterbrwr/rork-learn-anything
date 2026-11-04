@@ -207,7 +207,7 @@ fun ProfileScreen(nav: NavController) {
                 Icon(Icons.Rounded.WorkspacePremium, null, tint = c.amber)
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(if (s.isPremium) "Premium active" else "Sprout Premium", style = MaterialTheme.typography.titleLarge, color = c.onHero)
+                    Text(if (s.isPremium) "Premium active" else "Learn Anything Premium", style = MaterialTheme.typography.titleLarge, color = c.onHero)
                     Text("Unlimited tutor, paths and exam prep", style = MaterialTheme.typography.bodyMedium, color = c.onHero.copy(alpha = 0.7f))
                 }
                 Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, null, tint = c.onHero)
