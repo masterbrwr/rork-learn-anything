@@ -85,6 +85,7 @@ dependencies {
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.json)
     implementation("com.tom-roush:pdfbox-android:2.0.27.0")
+    implementation("com.google.mlkit:text-recognition:16.0.1")
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
     implementation(libs.koin.androidx.compose)
