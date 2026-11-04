@@ -24,6 +24,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.res.painterResource
+import com.rork.learnanything.R
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
@@ -146,8 +148,8 @@ fun TutorScreen(nav: NavController) {
     Column(Modifier.fillMaxSize().background(c.canvas).statusBarsPadding().imePadding()) {
         Row(Modifier.padding(start = 20.dp, end = 8.dp, top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text("Tutor", style = MaterialTheme.typography.headlineLarge, color = c.ink)
-                Text("Your AI learning partner", style = MaterialTheme.typography.bodyLarge, color = c.inkSoft)
+                Text("Spark.E", style = MaterialTheme.typography.headlineLarge, color = c.ink)
+                Text("Your caterpillar study companion", style = MaterialTheme.typography.bodyLarge, color = c.inkSoft)
             }
             IconButton(onClick = { AppStore.update { it.copy(tutorVoice = !it.tutorVoice) }; if (s.tutorVoice) tts?.stop() }) {
                 Icon(if (s.tutorVoice) Icons.AutoMirrored.Rounded.VolumeUp else Icons.AutoMirrored.Rounded.VolumeOff, if (s.tutorVoice) "Turn voice replies off" else "Read replies aloud", tint = if (s.tutorVoice) c.cobalt else c.inkSoft)
@@ -243,7 +245,11 @@ private val timeFmt = SimpleDateFormat("h:mm a", Locale.getDefault())
 private fun TutorAvatar() {
     val c = LA.colors
     Box(Modifier.size(44.dp).clip(CircleShape).background(c.cobaltSoft), contentAlignment = Alignment.Center) {
-        SparkleMark(Modifier.size(22.dp), c.cobalt)
+        androidx.compose.foundation.Image(
+            painter = painterResource(R.drawable.ic_caterpillar_mascot),
+            contentDescription = "Spark.E the Learn Anything caterpillar",
+            modifier = Modifier.fillMaxSize(),
+        )
     }
 }
 
