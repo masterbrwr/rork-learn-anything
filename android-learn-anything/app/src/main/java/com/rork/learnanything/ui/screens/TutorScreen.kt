@@ -148,8 +148,8 @@ fun TutorScreen(nav: NavController) {
     Column(Modifier.fillMaxSize().background(c.canvas).statusBarsPadding().imePadding()) {
         Row(Modifier.padding(start = 20.dp, end = 8.dp, top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text("Spark.E", style = MaterialTheme.typography.headlineLarge, color = c.ink)
-                Text("Your caterpillar study companion", style = MaterialTheme.typography.bodyLarge, color = c.inkSoft)
+                Text("Pip", style = MaterialTheme.typography.headlineLarge, color = c.ink)
+                Text("Your little garden guide", style = MaterialTheme.typography.bodyLarge, color = c.inkSoft)
             }
             IconButton(onClick = { AppStore.update { it.copy(tutorVoice = !it.tutorVoice) }; if (s.tutorVoice) tts?.stop() }) {
                 Icon(if (s.tutorVoice) Icons.AutoMirrored.Rounded.VolumeUp else Icons.AutoMirrored.Rounded.VolumeOff, if (s.tutorVoice) "Turn voice replies off" else "Read replies aloud", tint = if (s.tutorVoice) c.cobalt else c.inkSoft)
@@ -247,7 +247,7 @@ private fun TutorAvatar() {
     Box(Modifier.size(44.dp).clip(CircleShape).background(c.cobaltSoft), contentAlignment = Alignment.Center) {
         androidx.compose.foundation.Image(
             painter = painterResource(R.drawable.ic_caterpillar_mascot),
-            contentDescription = "Spark.E the Learn Anything caterpillar",
+            contentDescription = "Pip the Sprout caterpillar",
             modifier = Modifier.fillMaxSize(),
         )
     }
