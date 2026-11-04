@@ -93,7 +93,7 @@ private fun readOfficeText(uri: Uri, context: android.content.Context, presentat
                 if (value.isNotEmpty()) result.append(value).append(' ')
             }
         }
-        result.append("\\n")
+        result.append("\n")
         if (result.length >= 8000) return@forEach
     }
     return result.toString().take(8000).trim()
@@ -239,7 +239,7 @@ fun MaterialsScreen(nav: NavController) {
                     try {
                         val subject = title.ifBlank { "Course material" }
                         val notes = Ai.notesAction("summarize", source)
-                        AppStore.saveNote(Note(id = com.rork.learnanything.data.newId(), title = "$subject · Study kit", body = "$notes\\n\\n--- Original course material ---\\n$source", subject = subject))
+                        AppStore.saveNote(Note(id = com.rork.learnanything.data.newId(), title = "$subject · Study kit", body = "$notes\n\n--- Original course material ---\n$source", subject = subject))
                         var cardMessage = ""
                         if (makeCards) {
                             val payload = Ai.flashcards(source, 12)
