@@ -1,6 +1,7 @@
 package com.rork.learnanything.ui.screens
 
 import android.net.Uri
+import android.graphics.Bitmap
 import android.util.Xml
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -33,8 +34,14 @@ import org.xmlpull.v1.XmlPullParser
 import java.io.ByteArrayOutputStream
 import java.io.StringReader
 import java.util.zip.ZipInputStream
+import com.google.android.gms.tasks.Tasks
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.TextRecognizer
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
 import com.tom_roush.pdfbox.pdmodel.PDDocument
+import com.tom_roush.pdfbox.rendering.PDFRenderer
 import com.tom_roush.pdfbox.text.PDFTextStripper
 
 private fun readOfficeText(uri: Uri, context: android.content.Context, presentation: Boolean): String {
@@ -92,6 +99,38 @@ private fun readOfficeText(uri: Uri, context: android.content.Context, presentat
     return result.toString().take(8000).trim()
 }
 
+
+private fun recognizeBitmap(bitmap: Bitmap, recognizer: TextRecognizer): String =
+    Tasks.await(recognizer.process(InputImage.fromBitmap(bitmap, 0))).text
+
+private fun extractImageText(uri: Uri, context: android.content.Context): String {
+    val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+    return try {
+        Tasks.await(recognizer.process(InputImage.fromFilePath(context, uri))).text.take(8000)
+    } finally {
+        recognizer.close()
+    }
+}
+
+private fun extractScannedPdfText(document: PDDocument): String {
+    val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+    val result = StringBuilder()
+    try {
+        for (page in 0 until minOf(document.numberOfPages, 10)) {
+            val bitmap = PDFRenderer(document).renderImageWithDPI(page, 110f)
+            try {
+                result.append(recognizeBitmap(bitmap, recognizer)).append('\n')
+            } finally {
+                bitmap.recycle()
+            }
+            if (result.length >= 8000) break
+        }
+    } finally {
+        recognizer.close()
+    }
+    return result.toString().take(8000).trim()
+}
+
 @Composable
 fun MaterialsScreen(nav: NavController) {
     val c = LA.colors
@@ -116,10 +155,13 @@ fun MaterialsScreen(nav: NavController) {
                                 context.contentResolver.openInputStream(uri)?.use { stream ->
                                     PDDocument.load(stream).use { document ->
                                         require(document.numberOfPages <= 50) { "This PDF has more than 50 pages. Split it into smaller files." }
-                                        PDFTextStripper().getText(document).take(8000)
+                                        val extracted = PDFTextStripper().getText(document).take(8000)
+                                        if (extracted.isNotBlank()) extracted else extractScannedPdfText(document)
                                     }
                                 }.orEmpty()
                             }
+                            mime.startsWith("image/") || listOf(".png", ".jpg", ".jpeg", ".webp").any { fileName.endsWith(it) } ->
+                                extractImageText(uri, context)
                             fileName.endsWith(".docx") || mime.contains("wordprocessingml") ->
                                 readOfficeText(uri, context, presentation = false)
                             fileName.endsWith(".pptx") || mime.contains("presentationml") ->
@@ -133,7 +175,7 @@ fun MaterialsScreen(nav: NavController) {
                     if (title.isBlank()) title = uri.lastPathSegment?.substringAfterLast('/')?.substringBeforeLast('.') ?: "Course material"
                     status = if (text.isBlank()) "No selectable text was found. Scanned/photo PDFs need OCR and aren't supported yet." else "Material imported. Review it before generating study tools."
                 }.onFailure { error ->
-                    status = error.message ?: "Couldn't read that file. Try a text-based PDF, DOCX, PPTX, .txt or .md file."
+                    status = error.message ?: "Couldn't read that file. Try a PDF, DOCX, PPTX, image, .txt or .md file."
                 }
             }
         }
@@ -155,7 +197,7 @@ fun MaterialsScreen(nav: NavController) {
                 Spacer(Modifier.height(8.dp))
                 Text("Supports text-based PDF, Word (.docx), PowerPoint (.pptx), .txt and .md files, plus pasted text. Scanned PDFs, handwriting, Google Docs and YouTube import are not enabled yet. Imports are limited to 8,000 characters; PDFs are limited to 50 pages.", style = MaterialTheme.typography.bodySmall, color = c.inkSoft)
                 Spacer(Modifier.height(12.dp))
-                OutlinedButton(onClick = { picker.launch(arrayOf("application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.openxmlformats-officedocument.presentationml.presentation", "text/plain", "text/markdown", "text/*")) }, modifier = Modifier.fillMaxWidth()) {
+                OutlinedButton(onClick = { picker.launch(arrayOf("application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.openxmlformats-officedocument.presentationml.presentation", "text/plain", "text/markdown", "text/*", "image/*")) }, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Rounded.Description, null); Spacer(Modifier.width(8.dp)); Text("Choose a course file")
                 }
             }
