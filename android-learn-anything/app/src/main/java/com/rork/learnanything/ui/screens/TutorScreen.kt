@@ -157,7 +157,7 @@ fun TutorScreen(nav: NavController) {
         HorizontalDivider(color = c.border)
 
         LazyColumn(Modifier.weight(1f).fillMaxWidth(), state = listState, contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            if (s.chat.isEmpty()) item { TutorWelcome(s.profile.name) { send(it) } }
+            if (s.chat.isEmpty()) item { TutorWelcome(s.profile.name, s.courses.firstOrNull { it.id == s.activeCourseId }?.currentLesson?.title) { send(it) } }
             items(s.chat, key = { it.id }) { m ->
                 if (m.role == "user") UserBubble(m) else TutorBubble(m, isLast = m.id == s.chat.lastOrNull()?.id && !thinking) { send(it) }
             }
@@ -273,11 +273,10 @@ private fun TutorBubble(m: ChatMessage, isLast: Boolean, onChip: (String) -> Uni
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun TutorWelcome(name: String, onPick: (String) -> Unit) {
+private fun TutorWelcome(name: String, currentLessonTitle: String?, onPick: (String) -> Unit) {
     val c = LA.colors
-    val course = AppStore.state.value.courses.firstOrNull { it.id == AppStore.state.value.activeCourseId }
     val ideas = buildList {
-        course?.currentLesson?.let { add("Explain ${it.title.lowercase()} simply") }
+        currentLessonTitle?.let { add("Explain ${it.lowercase()} simply") }
         add("I'm confused about torque.")
         add("Quiz me on what I learned this week")
         add("Teach me photosynthesis from scratch")
