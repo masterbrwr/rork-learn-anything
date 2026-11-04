@@ -94,7 +94,25 @@ fun TutorScreen(nav: NavController) {
         AppStore.track("tutor_message", mapOf("mode" to mode))
         thinking = true
         scope.launch {
-            runCatching { Ai.tutor(AppStore.state.value.chat, mode, AppStore.learnerContext()) }
+            val tutorState = AppStore.state.value
+            val queryTerms = t.lowercase().split(Regex("[^a-z0-9]+")).filter { it.length > 2 }.toSet()
+            val relevantNotes = tutorState.notes
+                .map { note ->
+                    val searchable = "${note.title} ${note.subject} ${note.body}".lowercase()
+                    val score = queryTerms.count { term -> searchable.contains(term) }
+                    note to score
+                }
+                .filter { it.second > 0 }
+                .sortedWith(compareByDescending<Pair<com.rork.learnanything.data.Note, Int>> { it.second }.thenByDescending { it.first.updatedAt })
+                .take(4)
+            val courseContext = buildString {
+                appendLine("COURSE MATERIALS (use these as the primary source when relevant; say when the notes do not contain the answer):")
+                relevantNotes.forEach { (note, _) ->
+                    appendLine("\n[${note.subject} — ${note.title}]")
+                    appendLine(note.body.take(2400))
+                }
+            }.take(9000).takeIf { relevantNotes.isNotEmpty() }.orEmpty()
+            runCatching { Ai.tutor(tutorState.chat, mode, AppStore.learnerContext(), courseContext) }
                 .onSuccess { r ->
                     AppStore.consumeTutor()
                     val reply = ChatMessage(newId(), "assistant", r.text.ifBlank { "Let's try that again. Could you rephrase?" }, r.visual, r.chips)
