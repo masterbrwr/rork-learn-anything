@@ -42,7 +42,7 @@ fun MaterialsScreen(nav: NavController) {
             runCatching {
                 context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }.orEmpty()
             }.onSuccess { text ->
-                source = text.take(50000)
+                source = text.take(8000)
                 if (title.isBlank()) title = uri.lastPathSegment?.substringAfterLast('/')?.substringBeforeLast('.') ?: "Course material"
                 status = if (text.isBlank()) "This file has no readable text. Try a text-based .txt or .md file." else "Material imported. Review it before generating study tools."
             }.onFailure { status = "Couldn't read that file. Try pasting the text instead." }
@@ -78,7 +78,7 @@ fun MaterialsScreen(nav: NavController) {
                 Text("Paste lecture notes, a transcript, or reading excerpts", color = c.ink, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(10.dp))
                 BasicTextField(
-                    value = source, onValueChange = { source = it.take(50000) },
+                    value = source, onValueChange = { source = it.take(8000) },
                     modifier = Modifier.fillMaxWidth().heightIn(min = 180.dp),
                     textStyle = MaterialTheme.typography.bodyMedium.copy(color = c.ink),
                     cursorBrush = SolidColor(c.cobalt),
@@ -90,7 +90,7 @@ fun MaterialsScreen(nav: NavController) {
                     }
                 )
                 Spacer(Modifier.height(8.dp))
-                Text("${source.length}/50,000 characters", style = MaterialTheme.typography.labelSmall, color = c.inkSoft)
+                Text("${source.length}/8,000 characters", style = MaterialTheme.typography.labelSmall, color = c.inkSoft)
             }
         }
         Spacer(Modifier.height(10.dp))
@@ -106,7 +106,7 @@ fun MaterialsScreen(nav: NavController) {
                 scope.launch {
                     try {
                         val subject = title.ifBlank { "Course material" }
-                        val notes = Ai.notesAction("create structured study notes with headings, key ideas, definitions, examples, and a short recap", source)
+                        val notes = Ai.notesAction("summarize", source)
                         AppStore.saveNote(Note(id = com.rork.learnanything.data.newId(), title = subject, body = notes, subject = subject))
                         var cardMessage = ""
                         if (makeCards) {
