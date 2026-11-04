@@ -1,6 +1,7 @@
 package com.rork.learnanything.ui.screens
 
-import android.content.Intent
+import android.net.Uri
+import android.util.Xml
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -28,9 +29,68 @@ import com.rork.learnanything.ui.theme.LA
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.xmlpull.v1.XmlPullParser
+import java.io.ByteArrayOutputStream
+import java.io.StringReader
+import java.util.zip.ZipInputStream
 import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.text.PDFTextStripper
+
+private fun readOfficeText(uri: Uri, context: android.content.Context, presentation: Boolean): String {
+    val xmlParts = linkedMapOf<String, String>()
+    var totalBytes = 0
+    context.contentResolver.openInputStream(uri)?.use { raw ->
+        ZipInputStream(raw).use { zip ->
+            var entry = zip.nextEntry
+            var entryCount = 0
+            while (entry != null) {
+                entryCount++
+                require(entryCount <= 250) { "This office file contains too many parts." }
+                val name = entry.name
+                val wanted = if (presentation) {
+                    name.matches(Regex("ppt/slides/slide\\d+\\.xml"))
+                } else {
+                    name == "word/document.xml" || name == "word/footnotes.xml" ||
+                        name == "word/endnotes.xml" || name.matches(Regex("word/(header|footer)\\d+\\.xml"))
+                }
+                if (wanted) {
+                    val output = ByteArrayOutputStream()
+                    val buffer = ByteArray(4096)
+                    while (true) {
+                        val count = zip.read(buffer)
+                        if (count <= 0) break
+                        totalBytes += count
+                        require(totalBytes <= 10 * 1024 * 1024) { "This document is too large to import safely." }
+                        output.write(buffer, 0, count)
+                    }
+                    xmlParts[name] = output.toString(Charsets.UTF_8.name())
+                }
+                zip.closeEntry()
+                entry = zip.nextEntry
+            }
+        }
+    } ?: error("Couldn't open this document.")
+    val ordered = if (presentation) {
+        xmlParts.toList().sortedBy { Regex("slide(\\d+)").find(it.first)?.groupValues?.get(1)?.toIntOrNull() ?: Int.MAX_VALUE }
+    } else {
+        xmlParts.toList().sortedBy { if (it.first == "word/document.xml") "0" else it.first }
+    }
+    val result = StringBuilder()
+    ordered.forEach { (_, xml) ->
+        val parser = Xml.newPullParser()
+        parser.setInput(StringReader(xml))
+        while (parser.next() != XmlPullParser.END_DOCUMENT && result.length < 8000) {
+            if (parser.eventType == XmlPullParser.TEXT) {
+                val value = parser.text.trim()
+                if (value.isNotEmpty()) result.append(value).append(' ')
+            }
+        }
+        result.append("\\n")
+        if (result.length >= 8000) return@forEach
+    }
+    return result.toString().take(8000).trim()
+}
 
 @Composable
 fun MaterialsScreen(nav: NavController) {
@@ -49,16 +109,22 @@ fun MaterialsScreen(nav: NavController) {
                 val imported = withContext(Dispatchers.IO) {
                     runCatching {
                         val mime = context.contentResolver.getType(uri).orEmpty()
-                        if (mime == "application/pdf" || uri.toString().lowercase().endsWith(".pdf")) {
-                            PDFBoxResourceLoader.init(context)
-                            context.contentResolver.openInputStream(uri)?.use { stream ->
-                                PDDocument.load(stream).use { document ->
-                                    require(document.numberOfPages <= 50) { "This PDF has more than 50 pages. Split it into smaller files." }
-                                    PDFTextStripper().getText(document).take(8000)
-                                }
-                            }.orEmpty()
-                        } else {
-                            context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }?.take(8000).orEmpty()
+                        val fileName = uri.lastPathSegment.orEmpty().lowercase()
+                        when {
+                            mime == "application/pdf" || fileName.endsWith(".pdf") -> {
+                                PDFBoxResourceLoader.init(context)
+                                context.contentResolver.openInputStream(uri)?.use { stream ->
+                                    PDDocument.load(stream).use { document ->
+                                        require(document.numberOfPages <= 50) { "This PDF has more than 50 pages. Split it into smaller files." }
+                                        PDFTextStripper().getText(document).take(8000)
+                                    }
+                                }.orEmpty()
+                            }
+                            fileName.endsWith(".docx") || mime.contains("wordprocessingml") ->
+                                readOfficeText(uri, context, presentation = false)
+                            fileName.endsWith(".pptx") || mime.contains("presentationml") ->
+                                readOfficeText(uri, context, presentation = true)
+                            else -> context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }?.take(8000).orEmpty()
                         }
                     }
                 }
@@ -67,7 +133,7 @@ fun MaterialsScreen(nav: NavController) {
                     if (title.isBlank()) title = uri.lastPathSegment?.substringAfterLast('/')?.substringBeforeLast('.') ?: "Course material"
                     status = if (text.isBlank()) "No selectable text was found. Scanned/photo PDFs need OCR and aren't supported yet." else "Material imported. Review it before generating study tools."
                 }.onFailure { error ->
-                    status = error.message ?: "Couldn't read that file. Try a text-based PDF, .txt or .md file."
+                    status = error.message ?: "Couldn't read that file. Try a text-based PDF, DOCX, PPTX, .txt or .md file."
                 }
             }
         }
@@ -87,10 +153,10 @@ fun MaterialsScreen(nav: NavController) {
                     Text("Import course text", style = MaterialTheme.typography.titleMedium, color = c.ink)
                 }
                 Spacer(Modifier.height(8.dp))
-                Text("Supports text-based PDF, .txt and .md files, plus pasted text. Scanned PDFs, Word, PowerPoint, Google Docs, handwriting and YouTube import are not enabled yet. Imports are limited to 8,000 characters and PDFs to 50 pages.", style = MaterialTheme.typography.bodySmall, color = c.inkSoft)
+                Text("Supports text-based PDF, Word (.docx), PowerPoint (.pptx), .txt and .md files, plus pasted text. Scanned PDFs, handwriting, Google Docs and YouTube import are not enabled yet. Imports are limited to 8,000 characters; PDFs are limited to 50 pages.", style = MaterialTheme.typography.bodySmall, color = c.inkSoft)
                 Spacer(Modifier.height(12.dp))
-                OutlinedButton(onClick = { picker.launch(arrayOf("application/pdf", "text/plain", "text/markdown", "text/*")) }, modifier = Modifier.fillMaxWidth()) {
-                    Icon(Icons.Rounded.Description, null); Spacer(Modifier.width(8.dp)); Text("Choose a text file")
+                OutlinedButton(onClick = { picker.launch(arrayOf("application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.openxmlformats-officedocument.presentationml.presentation", "text/plain", "text/markdown", "text/*")) }, modifier = Modifier.fillMaxWidth()) {
+                    Icon(Icons.Rounded.Description, null); Spacer(Modifier.width(8.dp)); Text("Choose a course file")
                 }
             }
         }
