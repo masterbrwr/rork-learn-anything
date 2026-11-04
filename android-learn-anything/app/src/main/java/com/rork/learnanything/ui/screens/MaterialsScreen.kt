@@ -25,7 +25,12 @@ import com.rork.learnanything.data.Ai
 import com.rork.learnanything.data.AppStore
 import com.rork.learnanything.data.Note
 import com.rork.learnanything.ui.theme.LA
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
+import com.tom_roush.pdfbox.pdmodel.PDDocument
+import com.tom_roush.pdfbox.text.PDFTextStripper
 
 @Composable
 fun MaterialsScreen(nav: NavController) {
@@ -39,13 +44,32 @@ fun MaterialsScreen(nav: NavController) {
     var makeCards by remember { mutableStateOf(true) }
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) {
-            runCatching {
-                context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }.orEmpty()
-            }.onSuccess { text ->
-                source = text.take(8000)
-                if (title.isBlank()) title = uri.lastPathSegment?.substringAfterLast('/')?.substringBeforeLast('.') ?: "Course material"
-                status = if (text.isBlank()) "This file has no readable text. Try a text-based .txt or .md file." else "Material imported. Review it before generating study tools."
-            }.onFailure { status = "Couldn't read that file. Try pasting the text instead." }
+            scope.launch {
+                status = "Importing your material…"
+                val imported = withContext(Dispatchers.IO) {
+                    runCatching {
+                        val mime = context.contentResolver.getType(uri).orEmpty()
+                        if (mime == "application/pdf" || uri.toString().lowercase().endsWith(".pdf")) {
+                            PDFBoxResourceLoader.init(context)
+                            context.contentResolver.openInputStream(uri)?.use { stream ->
+                                PDDocument.load(stream).use { document ->
+                                    require(document.numberOfPages <= 50) { "This PDF has more than 50 pages. Split it into smaller files." }
+                                    PDFTextStripper().getText(document).take(8000)
+                                }
+                            }.orEmpty()
+                        } else {
+                            context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }?.take(8000).orEmpty()
+                        }
+                    }
+                }
+                imported.onSuccess { text ->
+                    source = text
+                    if (title.isBlank()) title = uri.lastPathSegment?.substringAfterLast('/')?.substringBeforeLast('.') ?: "Course material"
+                    status = if (text.isBlank()) "No selectable text was found. Scanned/photo PDFs need OCR and aren't supported yet." else "Material imported. Review it before generating study tools."
+                }.onFailure { error ->
+                    status = error.message ?: "Couldn't read that file. Try a text-based PDF, .txt or .md file."
+                }
+            }
         }
     }
 
@@ -63,9 +87,9 @@ fun MaterialsScreen(nav: NavController) {
                     Text("Import course text", style = MaterialTheme.typography.titleMedium, color = c.ink)
                 }
                 Spacer(Modifier.height(8.dp))
-                Text("Currently supports readable .txt and .md files, plus pasted text. PDF, Word, PowerPoint, Google Docs, handwriting and YouTube import are not enabled yet.", style = MaterialTheme.typography.bodySmall, color = c.inkSoft)
+                Text("Supports text-based PDF, .txt and .md files, plus pasted text. Scanned PDFs, Word, PowerPoint, Google Docs, handwriting and YouTube import are not enabled yet. Imports are limited to 8,000 characters and PDFs to 50 pages.", style = MaterialTheme.typography.bodySmall, color = c.inkSoft)
                 Spacer(Modifier.height(12.dp))
-                OutlinedButton(onClick = { picker.launch(arrayOf("text/plain", "text/markdown", "text/*")) }, modifier = Modifier.fillMaxWidth()) {
+                OutlinedButton(onClick = { picker.launch(arrayOf("application/pdf", "text/plain", "text/markdown", "text/*")) }, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Rounded.Description, null); Spacer(Modifier.width(8.dp)); Text("Choose a text file")
                 }
             }
