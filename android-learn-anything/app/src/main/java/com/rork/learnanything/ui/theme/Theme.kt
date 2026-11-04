@@ -63,24 +63,24 @@ data class LAColors(
 
 // Cool, crisp, premium, and technology-forward.
 private val Light = LAColors(
-    canvas = Color(0xFFF5F7FB), surface = Color(0xFFFFFFFF), surfaceAlt = Color(0xFFEEF2F7), border = Color(0xFFDCE3EC),
-    ink = Color(0xFF0B1220), inkSoft = Color(0xFF5B6577), inkFaint = Color(0xFF98A2B3),
-    hero = Color(0xFF0B1220), onHero = Color(0xFFF7F9FC),
-    coral = Color(0xFF5B5CE2), coralSoft = Color(0xFFE9E9FF),
-    cobalt = Color(0xFF08A6B5), cobaltSoft = Color(0xFFE0F7F9),
-    success = Color(0xFF16845B), successSoft = Color(0xFFE0F5EC),
-    amber = Color(0xFFD18A16), amberSoft = Color(0xFFFFF2D8),
+    canvas = Color(0xFFF3F5EA), surface = Color(0xFFFFFDF5), surfaceAlt = Color(0xFFE8EEDC), border = Color(0xFFD6DFC9),
+    ink = Color(0xFF20352A), inkSoft = Color(0xFF657568), inkFaint = Color(0xFF9AA58F),
+    hero = Color(0xFF20352A), onHero = Color(0xFFF8F6E9),
+    coral = Color(0xFF4F8058), coralSoft = Color(0xFFE4EEDB),
+    cobalt = Color(0xFF78965D), cobaltSoft = Color(0xFFE8EFDD),
+    success = Color(0xFF477A4C), successSoft = Color(0xFFE2EEDC),
+    amber = Color(0xFFB4874B), amberSoft = Color(0xFFF4EBD7),
     isDark = false,
 )
 
 private val Dark = LAColors(
-    canvas = Color(0xFF080C14), surface = Color(0xFF111827), surfaceAlt = Color(0xFF182235), border = Color(0xFF273449),
-    ink = Color(0xFFF5F7FB), inkSoft = Color(0xFFAAB5C7), inkFaint = Color(0xFF68758A),
-    hero = Color(0xFF111A2D), onHero = Color(0xFFF5F7FB),
-    coral = Color(0xFF8586FF), coralSoft = Color(0xFF25264F),
-    cobalt = Color(0xFF48D2DE), cobaltSoft = Color(0xFF12363D),
-    success = Color(0xFF45C98D), successSoft = Color(0xFF123327),
-    amber = Color(0xFFF1B84B), amberSoft = Color(0xFF3A2D15),
+    canvas = Color(0xFF101B16), surface = Color(0xFF1B2B21), surfaceAlt = Color(0xFF26392B), border = Color(0xFF3B4D3D),
+    ink = Color(0xFFF3F5EA), inkSoft = Color(0xFFB7C5B1), inkFaint = Color(0xFF82917E),
+    hero = Color(0xFF203529), onHero = Color(0xFFF3F5EA),
+    coral = Color(0xFF9BBE83), coralSoft = Color(0xFF304832),
+    cobalt = Color(0xFFB5CE8D), cobaltSoft = Color(0xFF344A35),
+    success = Color(0xFF78B77A), successSoft = Color(0xFF253D2A),
+    amber = Color(0xFFD7B46C), amberSoft = Color(0xFF453A25),
     isDark = true,
 )
 
@@ -160,8 +160,8 @@ fun AppTheme(themeMode: String = "system", content: @Composable () -> Unit) {
         surfaceContainer = c.surface, surfaceContainerLow = c.surface, surfaceContainerHigh = c.surfaceAlt,
         surfaceContainerHighest = c.surfaceAlt, surfaceContainerLowest = c.canvas, error = Color(0xFFFF6B6B),
     ) else lightColorScheme(
-        primary = c.coral, onPrimary = Color.White, primaryContainer = c.coralSoft, onPrimaryContainer = Color(0xFF383A9A),
-        secondary = c.cobalt, onSecondary = Color.White, secondaryContainer = c.cobaltSoft, onSecondaryContainer = Color(0xFF08606A),
+        primary = c.coral, onPrimary = Color.White, primaryContainer = c.coralSoft, onPrimaryContainer = Color(0xFF31543A),
+        secondary = c.cobalt, onSecondary = Color.White, secondaryContainer = c.cobaltSoft, onSecondaryContainer = Color(0xFF4C6540),
         tertiary = c.success, background = c.canvas, onBackground = c.ink, surface = c.canvas, onSurface = c.ink,
         surfaceVariant = c.surfaceAlt, onSurfaceVariant = c.inkSoft, outline = c.border, outlineVariant = c.border,
         surfaceContainer = c.surface, surfaceContainerLow = c.surface, surfaceContainerHigh = c.surfaceAlt,
