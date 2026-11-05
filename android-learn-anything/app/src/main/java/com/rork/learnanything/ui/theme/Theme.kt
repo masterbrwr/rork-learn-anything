@@ -61,26 +61,26 @@ data class LAColors(
     val isDark: Boolean,
 )
 
-// Cool, crisp, premium, and technology-forward.
+// Woodland palette: warm bark, sunlit cream, leaf greens, sky blue, and marigold.
 private val Light = LAColors(
-    canvas = Color(0xFFF3F5EA), surface = Color(0xFFFFFDF5), surfaceAlt = Color(0xFFE8EEDC), border = Color(0xFFD6DFC9),
-    ink = Color(0xFF20352A), inkSoft = Color(0xFF657568), inkFaint = Color(0xFF9AA58F),
-    hero = Color(0xFF20352A), onHero = Color(0xFFF8F6E9),
-    coral = Color(0xFF4F8058), coralSoft = Color(0xFFE4EEDB),
-    cobalt = Color(0xFF78965D), cobaltSoft = Color(0xFFE8EFDD),
-    success = Color(0xFF477A4C), successSoft = Color(0xFFE2EEDC),
-    amber = Color(0xFFB4874B), amberSoft = Color(0xFFF4EBD7),
+    canvas = Color(0xFFF7F0E3), surface = Color(0xFFFFFCF5), surfaceAlt = Color(0xFFEDE2D0), border = Color(0xFFDFCFB8),
+    ink = Color(0xFF3D3026), inkSoft = Color(0xFF75675A), inkFaint = Color(0xFFA99A87),
+    hero = Color(0xFF4B382B), onHero = Color(0xFFFFF8E9),
+    coral = Color(0xFFD96F4E), coralSoft = Color(0xFFF8E3D8),
+    cobalt = Color(0xFF4E8998), cobaltSoft = Color(0xFFDDECEF),
+    success = Color(0xFF54864D), successSoft = Color(0xFFE2EEDB),
+    amber = Color(0xFFC18A2D), amberSoft = Color(0xFFF6EACB),
     isDark = false,
 )
 
 private val Dark = LAColors(
-    canvas = Color(0xFF101B16), surface = Color(0xFF1B2B21), surfaceAlt = Color(0xFF26392B), border = Color(0xFF3B4D3D),
-    ink = Color(0xFFF3F5EA), inkSoft = Color(0xFFB7C5B1), inkFaint = Color(0xFF82917E),
-    hero = Color(0xFF203529), onHero = Color(0xFFF3F5EA),
-    coral = Color(0xFF9BBE83), coralSoft = Color(0xFF304832),
-    cobalt = Color(0xFFB5CE8D), cobaltSoft = Color(0xFF344A35),
-    success = Color(0xFF78B77A), successSoft = Color(0xFF253D2A),
-    amber = Color(0xFFD7B46C), amberSoft = Color(0xFF453A25),
+    canvas = Color(0xFF171E19), surface = Color(0xFF242C25), surfaceAlt = Color(0xFF303A30), border = Color(0xFF485246),
+    ink = Color(0xFFF7F0E3), inkSoft = Color(0xFFC8BBA8), inkFaint = Color(0xFF958B7B),
+    hero = Color(0xFF392C24), onHero = Color(0xFFFFF8E9),
+    coral = Color(0xFFFF9874), coralSoft = Color(0xFF50352D),
+    cobalt = Color(0xFF83C5D0), cobaltSoft = Color(0xFF29434A),
+    success = Color(0xFF9BCB82), successSoft = Color(0xFF2D432E),
+    amber = Color(0xFFE6BC62), amberSoft = Color(0xFF4A3D27),
     isDark = true,
 )
 
