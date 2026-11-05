@@ -191,7 +191,6 @@ fun PricingScreen(nav: NavController, welcome: Boolean = false, reason: String =
                         Text("Learn Anything Premium", style = MaterialTheme.typography.titleLarge, color = c.ink, fontWeight = FontWeight.Bold)
                         Text("$6.99/month", style = MaterialTheme.typography.titleMedium, color = c.inkSoft)
                     }
-                    Text("7 DAYS FREE", style = MaterialTheme.typography.labelMedium, color = c.success, fontWeight = FontWeight.Bold)
                 }
                 Spacer(Modifier.height(12.dp))
                 Text(
