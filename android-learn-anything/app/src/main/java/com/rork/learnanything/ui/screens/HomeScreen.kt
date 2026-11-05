@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -220,6 +221,27 @@ private fun HeroCard(nav: NavController) {
     val course = s.courses.firstOrNull { it.id == s.activeCourseId } ?: s.courses.firstOrNull()
     val shape = RoundedCornerShape(20.dp)
     Box(Modifier.fillMaxWidth().clip(shape).background(c.hero).padding(20.dp)) {
+        // A quiet woodland canopy motif adds depth without competing with lesson content.
+        Canvas(Modifier.matchParentSize()) {
+            val w = size.width
+            val h = size.height
+            val canopy = Color(0xFF8FAE67)
+            val sunlight = Color(0xFFE6B95E)
+            drawCircle(sunlight.copy(alpha = 0.20f), radius = w * 0.16f, center = androidx.compose.ui.geometry.Offset(w * 0.88f, h * 0.10f))
+            drawLine(Color(0xFFB98B5D).copy(alpha = 0.35f), androidx.compose.ui.geometry.Offset(w * 0.78f, 0f), androidx.compose.ui.geometry.Offset(w * 0.56f, h * 0.68f), strokeWidth = 7f)
+            drawLine(Color(0xFFB98B5D).copy(alpha = 0.28f), androidx.compose.ui.geometry.Offset(w * 0.67f, h * 0.27f), androidx.compose.ui.geometry.Offset(w * 0.92f, h * 0.42f), strokeWidth = 4f)
+            listOf(
+                Triple(0.76f, 0.12f, 0.10f), Triple(0.91f, 0.25f, 0.12f),
+                Triple(0.67f, 0.34f, 0.08f), Triple(0.94f, 0.53f, 0.09f),
+                Triple(0.80f, 0.68f, 0.07f), Triple(0.59f, 0.16f, 0.06f),
+            ).forEachIndexed { index, leaf ->
+                drawCircle(
+                    (if (index % 2 == 0) canopy else Color(0xFFD5A85A)).copy(alpha = 0.18f),
+                    radius = w * leaf.third,
+                    center = androidx.compose.ui.geometry.Offset(w * leaf.first, h * leaf.second),
+                )
+            }
+        }
         if (course == null || course.isComplete) {
             Column {
                 Text(if (course == null) "Start something new" else "You finished ${course.title}", style = MaterialTheme.typography.headlineMedium, color = c.onHero)
