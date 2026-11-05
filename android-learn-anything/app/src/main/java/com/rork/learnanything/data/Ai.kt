@@ -172,47 +172,45 @@ object Ai {
 
     private const val STEP_SCHEMA = """Each step object: {"type": one of "concept"|"example"|"reveal"|"mcq"|"truefalse"|"fill"|"match"|"order"|"estimate"|"sort"|"tapwords", "title": short (for tapwords: the instruction, e.g. \"Tap the two noble gases\"), "body": text (concept/example: 2-4 vivid sentences; questions: the question), "options": [4 choices for mcq; ["True","False"] for truefalse], "answer": index of correct option, "answerText": single word/short phrase for fill (use ____ in body), "pairs": [{"left","right"}] x4 for match, "items": correct ordered list of 3-5 for order; for tapwords the 1-3 exact single words from body to tap, "estimate": the learner slides to guess a number: body is the question, answerText the exact number only (digits), "min" and "max" the slider range, "unit" (e.g. \"%\", \"km\", \"years\"), "tolerance" the +/- error still counted correct, "sort": "options" 2-3 short group names and "pairs" 5-6 of {"left": item, "right": its group name exactly as in options}, "reveal": ungraded self-test flip cards: "pairs" 3-4 of {"left": term or question, "right": answer under 14 words}, "tapwords": body is one or two natural sentences (under 30 words) containing the target words, "explanation": why the answer is right, "misconception": the likely misunderstanding behind a wrong answer, "simpler": a simpler analogy or example, "hint": a nudge without giving it away, "concept": the specific concept tested (2-4 words), "difficulty": 1-5, "visual": optional {"type": "flow"|"cycle"|"timeline"|"bars"|"graph"|"compare"|"formula", "title", "caption", "formula" (formula type only), "items":[{"label","value" (number for bars/graph),"detail"}]} }"""
 
-    suspend fun generateCourse(goal: String, level: String, deadline: String, minutesPerDay: Int, style: String, learner: String): CourseDraft = try {
-        structured(
-            "You are the curriculum designer for Learn Anything. Position every learning path as an outcome-driven roadmap, not an encyclopedia. The learner is paying for structure, momentum, accountability, practice, and measurable progress. Turn a broad goal into a concrete result the learner can achieve. Prefer short daily missions, usually 5-15 minutes, with a clear win at the end of each mission. Build from prerequisites to the first useful result, then progressively harder applications. Use retrieval, spaced review, interleaving, worked examples, feedback, and real-world transfer. Avoid filler and generic AI lectures.",
-            """Learner goal: "$goal"
-Current level: $level. Deadline: $deadline. Time per day: $minutesPerDay minutes. Preferred style: $style.
-Context: $learner
-Design a personalized mastery roadmap in prerequisite order. ALWAYS teach essential foundations before advanced or specific material, even if the learner's goal sounds advanced. First identify the most valuable outcome hidden inside the goal and make it obvious in the title, overview, objectives, and first module. Break the roadmap into small daily missions that can be completed in 5-15 minutes, with a visible sense of progress and a practical win each day. The learner should always know: what I am learning, why it matters, what I need first, what I do next, and how I prove I can use it. Start with plain-language basics, key vocabulary, and the mental model; then build one concept at a time; then worked examples and real-world use; only later move to advanced techniques and edge cases. If a prerequisite is missing, make it an explicit early lesson and explain the gap in foundationGap. Include useful memory tricks only when they genuinely help. Every lesson should have a teach -> show -> retrieve -> practice -> feedback -> apply rhythm, with short checks after teaching rather than quiz-first content. Add a concrete real-world task whenever the topic supports one. Size the path to the deadline, but favor a 7-30 day habit-building roadmap for longer goals. Avoid vague lesson titles such as 'Introduction' when a specific outcome can be named.
-JSON schema: {"title": concise path title, "subject": broad subject (e.g. Biology), "overview": 1-2 sentences, "level": "Beginner"|"Intermediate"|"Advanced", "objectives": [3-5], "prerequisites": [1-3 concepts that come before], "nextSteps": [2-3 topics to learn after], "foundationGap": "" or one sentence, "modules": [{"title", "lessons": [{"title": specific, "minutes": 5-15}]}] (2-4 modules)}""",
-            CourseDraft.serializer(), 2500,
+    suspend fun generateCourse(goal: String, level: String, deadline: String, minutesPerDay: Int, style: String, learner: String): CourseDraft {
+        val draft = structured(
+            "You are the subject-matter expert AND curriculum designer for Learn Anything. Teach the exact skill or subject the learner requested. Never substitute generic advice about studying, learning strategies, productivity, motivation, or how to learn. The path must contain real subject content and practical instruction.",
+            """EXACT LEARNER GOAL: "$goal"
+Starting level: $level. Timeline: $deadline. Available time: $minutesPerDay minutes/day. Presentation preference: $style.
+Learner context: $learner
+
+NON-NEGOTIABLE CONTENT RULES:
+1. Teach the requested subject itself. If the learner asks algebra, teach algebra. If they ask motorcycle mechanics, teach the relevant mechanical concepts and safe procedures. If they ask biology, teach biology. Never create a course about study skills unless that is the actual goal.
+2. Make the roadmap specific to the requested outcome. Name real concepts, tools, methods, vocabulary, procedures, examples, and milestones from that subject. Avoid generic titles like "How to learn", "Stay motivated", "Study techniques", "Practice more", or "Build confidence".
+3. Break the goal into prerequisite-ordered modules. Every lesson title must say what subject knowledge or practical capability the learner will gain. Foundations must be foundations of the requested subject, not generic learning foundations.
+4. The first module must start teaching the actual topic immediately, after only necessary prerequisites. Explain what each concept is, why it works, and how it is used.
+5. Each lesson is a mini-lesson with teach -> demonstrate -> guided practice -> feedback -> apply. Include real subject-specific tasks or worked examples. Do not make the path a list of quizzes.
+6. Build toward the learner's stated outcome, with intermediate milestones and a final real-world demonstration or assessment that proves independent ability.
+7. Adapt scope to level and available time. Do not omit essential safety, prerequisite knowledge, or foundational concepts for practical topics. State when hands-on supervision or professional help is necessary.
+8. Presentation preference changes how explanations are presented, not the subject matter being taught.
+
+Return 2-5 modules with 3-6 specific lessons each (at least 8 lessons total). Lessons should generally take 5-15 minutes.
+JSON schema: {"title": "outcome-specific path title", "subject": "actual subject area", "overview": "1-2 sentences describing the exact capability", "level": "Beginner|Intermediate|Advanced", "objectives": ["3-5 specific subject outcomes"], "prerequisites": ["1-3 actual subject concepts"], "nextSteps": ["2-3 logical subject topics"], "foundationGap": "real prerequisite gap or empty", "modules": [{"title": "subject-specific module", "lessons": [{"title": "specific subject lesson", "minutes": 5}]}]}""",
+            CourseDraft.serializer(), 3500,
         )
-    } catch (e: Exception) {
-        val subject = goal.trim().split(" ").firstOrNull()?.replaceFirstChar { it.uppercase() } ?: "General"
-        val pace = minutesPerDay.coerceIn(10, 60)
-        CourseDraft(
-            title = "Getting Started: $goal",
-            subject = subject,
-            overview = "A starter path built from the fundamentals so you can begin learning while the AI service reconnects.",
-            level = level,
-            objectives = listOf("Understand the essential foundations", "Practice the core ideas", "Apply what you learned to a simple real-world task"),
-            prerequisites = emptyList(),
-            nextSteps = listOf("Build on the fundamentals", "Practice with harder examples"),
-            foundationGap = "Start with the fundamentals before moving into more specific applications.",
-            modules = listOf(
-                DraftModule("Foundations", listOf(
-                    DraftLesson("What is $goal?", (pace * 0.20).toInt().coerceIn(5, 15)),
-                    DraftLesson("Key terms and core ideas", (pace * 0.25).toInt().coerceIn(5, 15)),
-                )),
-                DraftModule("Build the skill", listOf(
-                    DraftLesson("Worked example", (pace * 0.25).toInt().coerceIn(5, 15)),
-                    DraftLesson("Guided practice", (pace * 0.30).toInt().coerceIn(5, 15)),
-                )),
-            ),
-        )
+        val lessonCount = draft.modules.sumOf { it.lessons.size }
+        if (draft.title.isBlank() || draft.subject.isBlank() || draft.modules.size < 2 || lessonCount < 8) {
+            throw AiException("The AI returned an incomplete learning path. Please regenerate it.", retryable = true)
+        }
+        val genericOnly = draft.modules.flatMap { it.lessons }.all { lesson ->
+            val title = lesson.title.lowercase()
+            listOf("how to learn", "study techniques", "stay motivated", "build confidence", "practice more").any { it in title }
+        }
+        if (genericOnly) throw AiException("The AI returned generic study advice instead of teaching your topic. Please regenerate the path.", retryable = true)
+        return draft
     }
 
     suspend fun generateLesson(course: Course, lesson: LessonRef, learner: String): LessonContent =
         structured(
             "You are an outstanding teacher for a mobile learning app. The goal is lasting understanding and confidence, not making the learner take a test. Teach in small, clear chunks, use analogies and real-world examples, show how to do things, and include practical memory tricks when useful.",
-            """Path: ${course.title} (${course.subject}). Lesson: "${lesson.title}"${if (lesson.remedial) " (this is a strengthening lesson: go slower, return to the foundations, use simpler examples and more guided practice)" else ""}.
+            """Learner goal: "${course.goal}". Path outcome: ${course.title} (${course.subject}). Path overview: ${course.overview}. Current lesson: "${lesson.title}"${if (lesson.remedial) " (this is a strengthening lesson: go slower, return to the foundations, use simpler examples and more guided practice)" else ""}.
 Difficulty: ${course.difficulty}/5. Learner: $learner
-Teach from the ground up. Assume no knowledge of this specific concept unless the learner context proves otherwise. First explain why it matters and any essential prerequisite; define key words in everyday language; build the core idea step by step; show a fully worked example and explain WHY each step works; give a practical best-method or useful shortcut; add a memorable mnemonic, pattern, analogy, or visual hook when it genuinely helps; then show a second example or real-world application. Never jump straight into questions or use unexplained jargon. Make the lesson teach-first, not quiz-first: create 8-10 short steps with at least 5 teaching/example/visual/reveal steps and only 3-4 purposeful practice/check steps. Place each check after the concept it checks. Use varied interaction types, explain the correct answer and common misconception, and allow the learner to learn from mistakes. Finish with a short recap or memory hook and one real-world application; do not end with a trick question.
+Teach the actual subject content named in the learner goal and lesson title. Do not teach generic study skills or explain how to learn. Every explanation, worked example, practice task, and real-world application must be about the requested subject. Teach from the ground up. Assume no knowledge of this specific concept unless the learner context proves otherwise. First explain why it matters and any essential prerequisite; define key words in everyday language; build the core idea step by step; show a fully worked example and explain WHY each step works; give a practical best-method or useful shortcut; add a memorable mnemonic, pattern, analogy, or visual hook when it genuinely helps; then show a second example or real-world application. Never jump straight into questions or use unexplained jargon. Make the lesson teach-first, not quiz-first: create 8-10 short steps with at least 5 teaching/example/visual/reveal steps and only 3-4 purposeful practice/check steps. Place each check after the concept it checks. Use varied interaction types, explain the correct answer and common misconception, and allow the learner to learn from mistakes. Finish with a short recap or memory hook and one real-world application; do not end with a trick question.
 JSON: {"summary": one sentence, "keyPoints": [3-4 short takeaways], "steps": [steps]}
 $STEP_SCHEMA""",
             LessonContent.serializer(), 4500,
