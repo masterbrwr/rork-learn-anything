@@ -61,26 +61,26 @@ data class LAColors(
     val isDark: Boolean,
 )
 
-// Woodland palette: warm bark, sunlit cream, leaf greens, sky blue, and marigold.
+// Fresh & Organic palette: leafy green, sunlight yellow, soft mint, and clean neutrals.
 private val Light = LAColors(
-    canvas = Color(0xFFF7F0E3), surface = Color(0xFFFFFCF5), surfaceAlt = Color(0xFFEDE2D0), border = Color(0xFFDFCFB8),
-    ink = Color(0xFF3D3026), inkSoft = Color(0xFF75675A), inkFaint = Color(0xFFA99A87),
-    hero = Color(0xFF4B382B), onHero = Color(0xFFFFF8E9),
-    coral = Color(0xFFD96F4E), coralSoft = Color(0xFFF8E3D8),
-    cobalt = Color(0xFF4E8998), cobaltSoft = Color(0xFFDDECEF),
-    success = Color(0xFF54864D), successSoft = Color(0xFFE2EEDB),
-    amber = Color(0xFFC18A2D), amberSoft = Color(0xFFF6EACB),
+    canvas = Color(0xFFF4F9F4), surface = Color(0xFFFFFFFF), surfaceAlt = Color(0xFFE8F1E8), border = Color(0xFFD5E2D5),
+    ink = Color(0xFF1E291B), inkSoft = Color(0xFF53624F), inkFaint = Color(0xFF84917F),
+    hero = Color(0xFF4CAF50), onHero = Color(0xFFFFFFFF),
+    coral = Color(0xFFFFC107), coralSoft = Color(0xFFFFF3C4),
+    cobalt = Color(0xFF6B9B72), cobaltSoft = Color(0xFFE4F0E5),
+    success = Color(0xFF4CAF50), successSoft = Color(0xFFDDF0DE),
+    amber = Color(0xFFFFC107), amberSoft = Color(0xFFFFF3C4),
     isDark = false,
 )
 
 private val Dark = LAColors(
-    canvas = Color(0xFF171E19), surface = Color(0xFF242C25), surfaceAlt = Color(0xFF303A30), border = Color(0xFF485246),
-    ink = Color(0xFFF7F0E3), inkSoft = Color(0xFFC8BBA8), inkFaint = Color(0xFF958B7B),
-    hero = Color(0xFF392C24), onHero = Color(0xFFFFF8E9),
-    coral = Color(0xFFFF9874), coralSoft = Color(0xFF50352D),
-    cobalt = Color(0xFF83C5D0), cobaltSoft = Color(0xFF29434A),
-    success = Color(0xFF9BCB82), successSoft = Color(0xFF2D432E),
-    amber = Color(0xFFE6BC62), amberSoft = Color(0xFF4A3D27),
+    canvas = Color(0xFF172219), surface = Color(0xFF202D22), surfaceAlt = Color(0xFF2B3A2D), border = Color(0xFF405443),
+    ink = Color(0xFFF0F7EF), inkSoft = Color(0xFFC2D2C0), inkFaint = Color(0xFF91A591),
+    hero = Color(0xFF4CAF50), onHero = Color(0xFF102014),
+    coral = Color(0xFFFFD54F), coralSoft = Color(0xFF4A401F),
+    cobalt = Color(0xFF8FC995), cobaltSoft = Color(0xFF2C4331),
+    success = Color(0xFF81C784), successSoft = Color(0xFF29432D),
+    amber = Color(0xFFFFC107), amberSoft = Color(0xFF4A401F),
     isDark = true,
 )
 
@@ -153,15 +153,15 @@ fun AppTheme(themeMode: String = "system", content: @Composable () -> Unit) {
     }
     val c = if (dark) Dark else Light
     val scheme = if (dark) darkColorScheme(
-        primary = c.coral, onPrimary = Color.White, primaryContainer = c.coralSoft, onPrimaryContainer = c.coral,
-        secondary = c.cobalt, onSecondary = Color.White, secondaryContainer = c.cobaltSoft, onSecondaryContainer = c.cobalt,
+        primary = c.success, onPrimary = if (dark) Color(0xFF102014) else Color.White, primaryContainer = c.successSoft, onPrimaryContainer = c.success,
+        secondary = c.amber, onSecondary = Color(0xFF332800), secondaryContainer = c.amberSoft, onSecondaryContainer = c.amber,
         tertiary = c.success, background = c.canvas, onBackground = c.ink, surface = c.canvas, onSurface = c.ink,
         surfaceVariant = c.surfaceAlt, onSurfaceVariant = c.inkSoft, outline = c.border, outlineVariant = c.border,
         surfaceContainer = c.surface, surfaceContainerLow = c.surface, surfaceContainerHigh = c.surfaceAlt,
         surfaceContainerHighest = c.surfaceAlt, surfaceContainerLowest = c.canvas, error = Color(0xFFFF6B6B),
     ) else lightColorScheme(
-        primary = c.coral, onPrimary = Color.White, primaryContainer = c.coralSoft, onPrimaryContainer = Color(0xFF31543A),
-        secondary = c.cobalt, onSecondary = Color.White, secondaryContainer = c.cobaltSoft, onSecondaryContainer = Color(0xFF4C6540),
+        primary = c.success, onPrimary = Color.White, primaryContainer = c.successSoft, onPrimaryContainer = Color(0xFF1E291B),
+        secondary = c.amber, onSecondary = Color(0xFF332800), secondaryContainer = c.amberSoft, onSecondaryContainer = Color(0xFF5A4300),
         tertiary = c.success, background = c.canvas, onBackground = c.ink, surface = c.canvas, onSurface = c.ink,
         surfaceVariant = c.surfaceAlt, onSurfaceVariant = c.inkSoft, outline = c.border, outlineVariant = c.border,
         surfaceContainer = c.surface, surfaceContainerLow = c.surface, surfaceContainerHigh = c.surfaceAlt,
