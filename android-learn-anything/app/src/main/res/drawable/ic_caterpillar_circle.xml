@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="256dp"
+    android:height="256dp"
+    android:viewportWidth="256"
+    android:viewportHeight="256">
+    <!-- The artwork is clipped to a real circular canvas; corners remain transparent. -->
+    <group>
+        <clip-path android:pathData="M128,4 A124,124 0,1 1,127.99,4 Z" />
+        <path android:fillColor="#F4F9F4" android:pathData="M0,0h256v256h-256z" />
+        <path android:fillColor="#DCEFD9" android:pathData="M0,190 Q58,164 104,190 T256,184 V256 H0Z" />
+        <!-- Caterpillar body -->
+        <path android:fillColor="#2E8B45" android:pathData="M42,158 C36,137 49,117 69,116 C88,115 100,132 97,151 C95,169 77,181 59,175 C50,172 45,166 42,158Z" />
+        <path android:fillColor="#39A852" android:pathData="M78,158 C72,133 91,111 114,114 C136,117 145,139 137,158 C129,178 104,183 88,171Z" />
+        <path android:fillColor="#4CAF50" android:pathData="M119,151 C113,126 132,103 155,108 C177,113 184,137 173,156 C162,176 137,175 126,162Z" />
+        <path android:fillColor="#62BD59" android:pathData="M157,139 C154,119 169,101 188,104 C208,107 216,126 207,143 C198,160 177,162 164,150Z" />
+        <path android:fillColor="#1E6635" android:pathData="M64,121 Q55,108 63,99 Q72,108 70,119Z" />
+        <path android:fillColor="#1E6635" android:pathData="M105,116 Q99,101 109,93 Q117,104 113,115Z" />
+        <path android:fillColor="#1E6635" android:pathData="M148,109 Q143,94 153,87 Q161,98 157,108Z" />
+        <!-- Face -->
+        <path android:fillColor="#173D24" android:pathData="M184,124a4,4 0,1 0,8 0a4,4 0,1 0,-8 0" />
+        <path android:fillColor="#173D24" android:pathData="M202,124a4,4 0,1 0,8 0a4,4 0,1 0,-8 0" />
+        <path android:strokeColor="#173D24" android:strokeWidth="2.5" android:strokeLineCap="round" android:fillColor="#00000000" android:pathData="M190,138 Q198,145 206,137" />
+        <!-- Graduation cap -->
+        <path android:fillColor="#244D36" android:pathData="M130,72 L183,54 L234,72 L181,91Z" />
+        <path android:fillColor="#183B2A" android:pathData="M151,81 L151,98 Q181,112 211,98 L211,81 L181,92Z" />
+        <path android:strokeColor="#FFC107" android:strokeWidth="4" android:strokeLineCap="round" android:fillColor="#00000000" android:pathData="M230,73 L230,101" />
+        <path android:fillColor="#FFC107" android:pathData="M224,101h12l-6,10Z" />
+        <!-- Open book -->
+        <path android:fillColor="#FFFFFF" android:pathData="M51,190 Q78,177 105,194 L105,226 Q78,209 51,222Z" />
+        <path android:fillColor="#FFF3C4" android:pathData="M105,194 Q132,177 159,190 L159,222 Q132,209 105,226Z" />
+        <path android:strokeColor="#D7A927" android:strokeWidth="3" android:fillColor="#00000000" android:pathData="M105,194 L105,226" />
+        <path android:strokeColor="#9AB99A" android:strokeWidth="2" android:strokeLineCap="round" android:fillColor="#00000000" android:pathData="M65,199 Q82,194 94,202 M65,208 Q82,203 94,211 M117,201 Q134,193 147,198 M117,210 Q134,202 147,207" />
+    </group>
+</vector>
