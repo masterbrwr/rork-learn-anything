@@ -174,7 +174,7 @@ object Ai {
 
     suspend fun generateCourse(goal: String, level: String, deadline: String, minutesPerDay: Int, style: String, learner: String): CourseDraft {
         val draft = structured(
-            "You are the subject-matter expert AND curriculum designer for Learn Anything. Teach the exact skill or subject the learner requested. Never substitute generic advice about studying, learning strategies, productivity, motivation, or how to learn. The path must contain real subject content and practical instruction.",
+            "You are the subject-matter expert AND curriculum designer for Learn Anything. Teach the exact skill or subject the learner requested. Never substitute generic advice about studying, learning strategies, productivity, motivation, or how to learn. Position every learning path as an outcome-driven roadmap. The path must contain real subject content and practical instruction.",
             """EXACT LEARNER GOAL: "$goal"
 Starting level: $level. Timeline: $deadline. Available time: $minutesPerDay minutes/day. Presentation preference: $style.
 Learner context: $learner
