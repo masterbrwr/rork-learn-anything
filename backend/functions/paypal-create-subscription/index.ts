@@ -111,6 +111,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         user_id: user.id,
         paypal_subscription_id: data.id,
+        paypal_plan_id: planId,
         status: data.status || "APPROVAL_PENDING",
       }),
     });
