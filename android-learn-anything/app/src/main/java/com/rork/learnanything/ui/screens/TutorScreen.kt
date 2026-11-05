@@ -246,8 +246,8 @@ private fun TutorAvatar() {
     val c = LA.colors
     Box(Modifier.size(44.dp).clip(CircleShape).background(c.cobaltSoft), contentAlignment = Alignment.Center) {
         androidx.compose.foundation.Image(
-            painter = painterResource(R.drawable.ic_caterpillar_mascot),
-            contentDescription = "Pip the Sprout caterpillar",
+            painter = painterResource(R.drawable.ic_pip_avatar),
+            contentDescription = "Pip the Learn Anything caterpillar",
             modifier = Modifier.fillMaxSize(),
         )
     }
