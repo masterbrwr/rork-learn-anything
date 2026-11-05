@@ -123,7 +123,7 @@ fun PricingScreen(nav: NavController, welcome: Boolean = false, reason: String =
                 Text("Check Premium status", color = c.inkSoft)
             }
             Text(
-                "7-day free trial, then $6.99/month. Cancel anytime.",
+                "$6.99/month. Cancel anytime.",
                 style = MaterialTheme.typography.bodySmall,
                 color = c.inkFaint,
                 modifier = Modifier.fillMaxWidth(),
@@ -148,7 +148,7 @@ fun PricingScreen(nav: NavController, welcome: Boolean = false, reason: String =
                         Column(Modifier.weight(1f)) {
                             Text(if (welcome) "Start with Premium" else reasonTitle, style = MaterialTheme.typography.titleMedium, color = c.ink, fontWeight = FontWeight.Bold)
                             Spacer(Modifier.height(3.dp))
-                            Text(if (welcome) "Try all of Learn Anything with a 7-day free trial, or continue with the Free version below." else reasonBody, style = MaterialTheme.typography.bodySmall, color = c.inkSoft)
+                            Text(if (welcome) "Unlock Premium for $6.99/month, or continue with the Free version below." else reasonBody, style = MaterialTheme.typography.bodySmall, color = c.inkSoft)
                         }
                     }
                 }
