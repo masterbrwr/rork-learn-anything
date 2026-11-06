@@ -115,7 +115,30 @@ Deno.serve(async (req) => {
         status: data.status || "APPROVAL_PENDING",
       }),
     });
-    if (!db.ok) console.error("Failed to save subscription mapping", db.status, (await db.text()).slice(0, 1000));
+    if (!db.ok) {
+      const dbError = (await db.text()).slice(0, 1000);
+      console.error("Failed to save subscription mapping", db.status, dbError);
+
+      // Do not send a learner to checkout if we cannot associate the PayPal
+      // subscription with their account. Cancel the orphaned subscription so
+      // a successful payment cannot become impossible to recognize in-app.
+      const rollback = await fetch(
+        `${baseUrl}/v1/billing/subscriptions/${encodeURIComponent(data.id)}/cancel`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({ reason: "Learn Anything could not securely link this subscription to the account." }),
+        },
+      );
+      if (!rollback.ok) {
+        console.error("Could not cancel unlinked PayPal subscription", rollback.status, (await rollback.text()).slice(0, 1000));
+      }
+      return response({ error: "We couldn't safely link checkout to your account. No checkout was started; please try again later." }, 502);
+    }
 
     return response({ subscription_id: data.id, status: data.status, approve_url: approval });
   } catch (error) {
