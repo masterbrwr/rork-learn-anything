@@ -55,24 +55,29 @@ private fun readOfficeText(uri: Uri, context: android.content.Context, presentat
                 entryCount++
                 require(entryCount <= 250) { "This office file contains too many parts." }
                 val name = entry.name
+                // Count every decompressed ZIP entry, not just XML we plan to parse.
+                // This prevents oversized embedded media or ignored entries from bypassing the import limit.
                 val wanted = if (presentation) {
                     name.matches(Regex("ppt/slides/slide\\d+\\.xml"))
                 } else {
                     name == "word/document.xml" || name == "word/footnotes.xml" ||
                         name == "word/endnotes.xml" || name.matches(Regex("word/(header|footer)\\d+\\.xml"))
                 }
-                if (wanted) {
-                    val output = ByteArrayOutputStream()
-                    val buffer = ByteArray(4096)
-                    while (true) {
-                        val count = zip.read(buffer)
-                        if (count <= 0) break
-                        totalBytes += count
-                        require(totalBytes <= 10 * 1024 * 1024) { "This document is too large to import safely." }
-                        output.write(buffer, 0, count)
+                val output = if (wanted) ByteArrayOutputStream() else null
+                val buffer = ByteArray(4096)
+                var entryBytes = 0
+                while (true) {
+                    val count = zip.read(buffer)
+                    if (count < 0) break
+                    if (count == 0) continue
+                    entryBytes += count
+                    totalBytes += count
+                    require(entryBytes <= 10 * 1024 * 1024 && totalBytes <= 25 * 1024 * 1024) {
+                        "This document expands beyond the safe import limit."
                     }
-                    xmlParts[name] = output.toString(Charsets.UTF_8.name())
+                    output?.write(buffer, 0, count)
                 }
+                if (output != null) xmlParts[name] = output.toString(Charsets.UTF_8.name())
                 zip.closeEntry()
                 entry = zip.nextEntry
             }
@@ -166,7 +171,9 @@ fun MaterialsScreen(nav: NavController) {
                                 readOfficeText(uri, context, presentation = false)
                             fileName.endsWith(".pptx") || mime.contains("presentationml") ->
                                 readOfficeText(uri, context, presentation = true)
-                            else -> context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }?.take(8000).orEmpty()
+                            mime.startsWith("text/") || fileName.endsWith(".txt") || fileName.endsWith(".md") ->
+                                context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }?.take(8000).orEmpty()
+                            else -> error("Unsupported file type. Choose PDF, DOCX, PPTX, image, .txt or .md.")
                         }
                     }
                 }
