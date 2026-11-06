@@ -108,8 +108,9 @@ jobs:
         working-directory: android-learn-anything
         run: |
           set +x
-          test -n "$SUPABASE_URL"
-          test -n "$SUPABASE_ANON_KEY"
+          # Missing deployment secrets keep AI disabled at runtime but do not block local CI compilation.
+          SUPABASE_URL="${SUPABASE_URL:-}"
+          SUPABASE_ANON_KEY="${SUPABASE_ANON_KEY:-}"
           cat > app/src/main/java/com/rork/learnanything/Config.kt <<EOF
           package com.rork.learnanything
           object Config {
