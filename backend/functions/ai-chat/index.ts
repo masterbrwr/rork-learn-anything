@@ -85,6 +85,39 @@ Deno.serve(async (req) => {
   const user = await authenticatedUser(req).catch(() => null);
   if (!user) return errorResponse(401, "Please sign in again to use your tutor.");
 
+  // Enforce an atomic per-account quota before spending Gemini tokens.
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")?.trim();
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")?.trim();
+  if (!supabaseUrl || !serviceRoleKey) {
+    return errorResponse(503, "AI service is not fully configured");
+  }
+  try {
+    const quota = await fetch(`${supabaseUrl.replace(/\\/$/, "")}/rest/v1/rpc/consume_ai_chat_quota`, {
+      method: "POST",
+      headers: {
+        apikey: serviceRoleKey,
+        Authorization: `Bearer ${serviceRoleKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ p_user_id: user.id }),
+      signal: AbortSignal.timeout(8_000),
+    });
+    if (!quota.ok) {
+      console.error("AI quota check failed", quota.status, (await quota.text()).slice(0, 500));
+      return errorResponse(503, "AI service is temporarily unavailable");
+    }
+    const allowed = await quota.json();
+    if (allowed !== true) {
+      return new Response(JSON.stringify({ error: "You've reached the tutor limit of 20 requests per minute. Please wait a moment and try again." }), {
+        status: 429,
+        headers: { ...cors, "Content-Type": "application/json", "Retry-After": "60" },
+      });
+    }
+  } catch (error) {
+    console.error("AI quota check unavailable", error instanceof Error ? error.message : "unknown error");
+    return errorResponse(503, "AI service is temporarily unavailable");
+  }
+
   const apiKey = Deno.env.get("GEMINI_API_KEY")?.trim();
   if (!apiKey) return errorResponse(503, "AI service is not configured");
 
