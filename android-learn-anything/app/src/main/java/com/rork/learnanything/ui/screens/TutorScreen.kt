@@ -24,6 +24,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.graphicsLayer
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.foundation.Canvas
@@ -272,53 +279,79 @@ private val timeFmt = SimpleDateFormat("h:mm a", Locale.getDefault())
 
 @Composable
 private fun PipMascot(modifier: Modifier = Modifier, compact: Boolean = false) {
-    val green = Color(0xFF4CAF50)
-    val lightGreen = Color(0xFF8BCF65)
-    val darkGreen = Color(0xFF287A3C)
-    val yellow = Color(0xFFFFC107)
-    Canvas(modifier) {
+    val floatMotion = rememberInfiniteTransition(label = "pip_float")
+    val bob by floatMotion.animateFloat(
+        initialValue = 0f,
+        targetValue = -2.2f,
+        animationSpec = infiniteRepeatable(tween(1900), repeatMode = RepeatMode.Reverse),
+        label = "pip_bob",
+    )
+    val green = Color(0xFF4C9B52)
+    val lightGreen = Color(0xFF9AD66C)
+    val deepGreen = Color(0xFF1D5937)
+    val gold = Color(0xFFE8BD59)
+    Canvas(modifier.graphicsLayer { translationY = bob * density }) {
         val sx = size.width / 88f
         val sy = size.height / 100f
+        val unit = minOf(sx, sy)
         fun p(x: Float, y: Float) = Offset(x * sx, y * sy)
-        fun dot(x: Float, y: Float, r: Float, color: Color) {
-            drawCircle(color, r * sx, p(x, y))
+        fun glossy(x: Float, y: Float, r: Float, color: Color) {
+            val center = p(x, y)
+            val radius = r * unit
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(
+                        color.copy(red = (color.red * 0.72f + 0.28f).coerceAtMost(1f), green = (color.green * 0.72f + 0.28f).coerceAtMost(1f), blue = (color.blue * 0.72f + 0.28f).coerceAtMost(1f)),
+                        color,
+                        color.copy(red = color.red * 0.48f, green = color.green * 0.58f, blue = color.blue * 0.52f),
+                    ),
+                    center = Offset(center.x - radius * 0.28f, center.y - radius * 0.32f),
+                    radius = radius * 1.45f,
+                ),
+                radius = radius,
+                center = center,
+            )
+            drawCircle(Color.White.copy(alpha = 0.22f), radius * 0.12f, Offset(center.x - radius * 0.35f, center.y - radius * 0.42f))
         }
-        // Little feet
+        // Soft contact shadow grounds Pip instead of making him look like a flat sticker.
+        drawOval(Color(0xFF183A25).copy(alpha = 0.16f), topLeft = p(5f, 83f), size = Size(75f * sx, 10f * sy))
         if (!compact) {
+            // Tiny feet and curved antennae.
             listOf(17f, 34f, 51f, 65f).forEach { x ->
-                drawLine(darkGreen, p(x, 78f), p(x - 2f, 88f), 2.5f * sx)
-                drawLine(darkGreen, p(x - 2f, 88f), p(x + 4f, 88f), 2.5f * sx)
+                drawLine(deepGreen, p(x, 76f), p(x - 2f, 88f), 3f * unit, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+                glossy(x + 1f, 88f, 3.3f, Color(0xFF80553B))
             }
-            // Antennae and leaf tips
-            drawLine(darkGreen, p(65f, 30f), p(59f, 13f), 2.2f * sx)
-            drawLine(darkGreen, p(74f, 30f), p(81f, 13f), 2.2f * sx)
-            dot(57f, 11f, 5f, yellow)
-            dot(83f, 11f, 5f, lightGreen)
+            drawLine(deepGreen, p(64f, 29f), p(59f, 12f), 2.8f * unit, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+            drawLine(deepGreen, p(75f, 29f), p(82f, 12f), 2.8f * unit, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+            glossy(57f, 10f, 4.5f, gold)
+            glossy(83f, 10f, 4.5f, lightGreen)
         }
-        // Curved caterpillar body: overlapping soft segments
-        dot(17f, 69f, 14f, darkGreen)
-        dot(17f, 66f, 13f, lightGreen)
-        dot(36f, 68f, 15f, darkGreen)
-        dot(36f, 64f, 14f, green)
-        dot(54f, 60f, 16f, darkGreen)
-        dot(54f, 56f, 15f, lightGreen)
-        dot(68f, 42f, 19f, darkGreen)
-        dot(67f, 39f, 18f, green)
-        // Segment highlights
-        dot(12f, 61f, 3f, Color(0xFFB9E68D))
-        dot(31f, 57f, 3f, Color(0xFFB9E68D))
-        dot(49f, 49f, 3f, Color(0xFFB9E68D))
-        // Face
-        dot(61f, 35f, 4.2f, Color.White)
-        dot(74f, 35f, 4.2f, Color.White)
-        dot(62f, 36f, 1.9f, Color(0xFF183D2A))
-        dot(75f, 36f, 1.9f, Color(0xFF183D2A))
-        drawLine(darkGreen, p(64f, 48f), p(70f, 50f), 1.8f * sx)
-        drawLine(darkGreen, p(70f, 50f), p(75f, 47f), 1.8f * sx)
-        dot(56f, 43f, 3f, Color(0xFFFFA8A0))
-        dot(79f, 43f, 3f, Color(0xFFFFA8A0))
-        // Tiny leaf collar
-        dot(51f, 76f, 4f, yellow)
+        // Overlapping, shaded body segments with a dark emerald underside.
+        glossy(17f, 69f, 14f, deepGreen)
+        glossy(17f, 65f, 12.5f, lightGreen)
+        glossy(36f, 68f, 15f, deepGreen)
+        glossy(36f, 63f, 13.5f, green)
+        glossy(54f, 59f, 16f, deepGreen)
+        glossy(54f, 54f, 14.5f, lightGreen)
+        glossy(68f, 41f, 20f, deepGreen)
+        glossy(67f, 37f, 18f, green)
+        // Segment seams and tiny highlights add depth.
+        listOf(17f to 70f, 36f to 71f, 54f to 62f, 68f to 48f).forEach { (x, y) ->
+            drawArc(Color(0xFF16472E).copy(alpha = 0.45f), 15f, 145f, false, p(x - 10f, y - 9f), Size(20f * sx, 16f * sy), style = androidx.compose.ui.graphics.drawscope.Stroke(1.1f * unit))
+        }
+        // Large friendly eyes with dark irises and glassy catchlights.
+        glossy(61f, 34f, 5.6f, Color(0xFFFFFDF4))
+        glossy(75f, 34f, 5.6f, Color(0xFFFFFDF4))
+        glossy(62f, 35f, 2.8f, Color(0xFF173B2B))
+        glossy(76f, 35f, 2.8f, Color(0xFF173B2B))
+        drawCircle(Color.White.copy(alpha = 0.92f), 0.9f * unit, p(61f, 33f))
+        drawCircle(Color.White.copy(alpha = 0.92f), 0.9f * unit, p(75f, 33f))
+        // Smile, warm cheeks, and a small leaf-shaped collar accent.
+        drawLine(deepGreen, p(64f, 47f), p(69f, 50f), 1.8f * unit, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+        drawLine(deepGreen, p(69f, 50f), p(75f, 47f), 1.8f * unit, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+        glossy(55f, 43f, 2.8f, Color(0xFFEFA6A0))
+        glossy(80f, 43f, 2.8f, Color(0xFFEFA6A0))
+        glossy(50f, 76f, 3.8f, gold)
     }
 }
 
