@@ -34,6 +34,21 @@ OUTPUT STYLE:
 - The learner should leave each lesson knowing both what to do and why it works.
 `;
 
+async function authenticatedUser(req: Request) {
+  const authorization = req.headers.get("Authorization");
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")?.trim();
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY")?.trim();
+  if (!authorization?.startsWith("Bearer ") || !supabaseUrl || !anonKey) return null;
+
+  const result = await fetch(`${supabaseUrl.replace(/\/$/, "")}/auth/v1/user`, {
+    headers: { apikey: anonKey, Authorization: authorization },
+    signal: AbortSignal.timeout(10_000),
+  });
+  if (!result.ok) return null;
+  const user = await result.json();
+  return typeof user?.id === "string" ? user : null;
+}
+
 function errorResponse(status: number, error: string) {
   return new Response(JSON.stringify({ error }), {
     status,
@@ -67,6 +82,9 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return errorResponse(405, "Method not allowed");
 
+  const user = await authenticatedUser(req).catch(() => null);
+  if (!user) return errorResponse(401, "Please sign in again to use your tutor.");
+
   const apiKey = Deno.env.get("GEMINI_API_KEY")?.trim();
   if (!apiKey) return errorResponse(503, "AI service is not configured");
 
@@ -83,12 +101,30 @@ Deno.serve(async (req) => {
 
   const request = body as { messages?: unknown; max_tokens?: unknown; temperature?: unknown };
   if (!Array.isArray(request.messages)) return errorResponse(400, "messages must be an array");
+  if (request.messages.length < 1 || request.messages.length > 40) {
+    return errorResponse(400, "Send between 1 and 40 messages per request");
+  }
+
+  let totalCharacters = 0;
+  for (const item of request.messages) {
+    if (typeof item !== "object" || item === null) return errorResponse(400, "Invalid message");
+    const message = item as { role?: unknown; content?: unknown };
+    if (typeof message.content !== "string") return errorResponse(400, "Message content must be text");
+    if (message.content.length > 20_000) return errorResponse(413, "A message is too long");
+    totalCharacters += message.content.length;
+    if (totalCharacters > 60_000) return errorResponse(413, "Conversation is too large");
+    if (!["system", "user", "assistant"].includes(String(message.role))) {
+      return errorResponse(400, "Invalid message role");
+    }
+  }
 
   const { systemInstruction, contents } = convertMessages(
     request.messages as Array<{ role?: string; content?: unknown }>,
   );
 
-  if (contents.length === 0) return errorResponse(400, "No user messages supplied");
+  if (contents.length === 0 || !request.messages.some((m: any) => m?.role === "user")) {
+    return errorResponse(400, "At least one user message is required");
+  }
 
   const maxOutputTokens = typeof request.max_tokens === "number"
     ? Math.max(1, Math.min(Math.floor(request.max_tokens), 8192))
