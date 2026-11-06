@@ -24,6 +24,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.foundation.Canvas
 import androidx.compose.ui.res.painterResource
 import com.rork.learnanything.R
 import androidx.compose.ui.platform.LocalContext
@@ -268,14 +271,61 @@ fun TutorScreen(nav: NavController) {
 private val timeFmt = SimpleDateFormat("h:mm a", Locale.getDefault())
 
 @Composable
+private fun PipMascot(modifier: Modifier = Modifier, compact: Boolean = false) {
+    val green = Color(0xFF4CAF50)
+    val lightGreen = Color(0xFF8BCF65)
+    val darkGreen = Color(0xFF287A3C)
+    val yellow = Color(0xFFFFC107)
+    Canvas(modifier) {
+        val sx = size.width / 88f
+        val sy = size.height / 100f
+        fun p(x: Float, y: Float) = Offset(x * sx, y * sy)
+        fun dot(x: Float, y: Float, r: Float, color: Color) {
+            drawCircle(color, r * sx, p(x, y))
+        }
+        // Little feet
+        if (!compact) {
+            listOf(17f, 34f, 51f, 65f).forEach { x ->
+                drawLine(darkGreen, p(x, 78f), p(x - 2f, 88f), 2.5f * sx)
+                drawLine(darkGreen, p(x - 2f, 88f), p(x + 4f, 88f), 2.5f * sx)
+            }
+            // Antennae and leaf tips
+            drawLine(darkGreen, p(65f, 30f), p(59f, 13f), 2.2f * sx)
+            drawLine(darkGreen, p(74f, 30f), p(81f, 13f), 2.2f * sx)
+            dot(57f, 11f, 5f, yellow)
+            dot(83f, 11f, 5f, lightGreen)
+        }
+        // Curved caterpillar body: overlapping soft segments
+        dot(17f, 69f, 14f, darkGreen)
+        dot(17f, 66f, 13f, lightGreen)
+        dot(36f, 68f, 15f, darkGreen)
+        dot(36f, 64f, 14f, green)
+        dot(54f, 60f, 16f, darkGreen)
+        dot(54f, 56f, 15f, lightGreen)
+        dot(68f, 42f, 19f, darkGreen)
+        dot(67f, 39f, 18f, green)
+        // Segment highlights
+        dot(12f, 61f, 3f, Color(0xFFB9E68D))
+        dot(31f, 57f, 3f, Color(0xFFB9E68D))
+        dot(49f, 49f, 3f, Color(0xFFB9E68D))
+        // Face
+        dot(61f, 35f, 4.2f, Color.White)
+        dot(74f, 35f, 4.2f, Color.White)
+        dot(62f, 36f, 1.9f, Color(0xFF183D2A))
+        dot(75f, 36f, 1.9f, Color(0xFF183D2A))
+        drawLine(darkGreen, p(64f, 48f), p(70f, 50f), 1.8f * sx)
+        drawLine(darkGreen, p(70f, 50f), p(75f, 47f), 1.8f * sx)
+        dot(56f, 43f, 3f, Color(0xFFFFA8A0))
+        dot(79f, 43f, 3f, Color(0xFFFFA8A0))
+        // Tiny leaf collar
+        dot(51f, 76f, 4f, yellow)
+    }
+}
+
+@Composable
 private fun TutorAvatar() {
-    val c = LA.colors
-    Box(Modifier.size(44.dp).clip(CircleShape).background(c.cobaltSoft), contentAlignment = Alignment.Center) {
-        androidx.compose.foundation.Image(
-            painter = painterResource(R.drawable.ic_caterpillar_circle),
-            contentDescription = "Pip the Learn Anything caterpillar",
-            modifier = Modifier.fillMaxSize(),
-        )
+    Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+        PipMascot(Modifier.fillMaxSize(), compact = true)
     }
 }
 
@@ -331,16 +381,34 @@ private fun TutorWelcome(name: String, currentLessonTitle: String?, onPick: (Str
         add("Quiz me on what I learned this week")
         add("Teach me photosynthesis from scratch")
     }
-    Column {
-        Row {
-            TutorAvatar(); Spacer(Modifier.width(14.dp))
-            Text(
-                "Hi${if (name.isNotBlank()) " $name" else ""}. Ask me anything. I'll explain it, quiz you, or give you just a hint, and I remember what you're learning.",
-                style = MaterialTheme.typography.bodyLarge, color = c.ink, modifier = Modifier.padding(top = 4.dp),
-            )
+    Column(Modifier.fillMaxWidth()) {
+        Row(
+            Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            PipMascot(Modifier.width(92.dp).height(112.dp))
+            Surface(
+                modifier = Modifier.weight(1f),
+                color = c.surface,
+                shape = RoundedCornerShape(20.dp, 20.dp, 20.dp, 5.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, c.border),
+                shadowElevation = 2.dp,
+            ) {
+                Column(Modifier.padding(horizontal = 14.dp, vertical = 13.dp)) {
+                    Text("Pip", style = MaterialTheme.typography.titleMedium, color = c.cobalt)
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "Hey${if (name.isNotBlank()) " $name" else ""}! I'm Pip. Ask me anything and we'll figure it out together. I can explain, practice, or quiz you!",
+                        style = MaterialTheme.typography.bodyMedium, color = c.ink,
+                    )
+                }
+            }
         }
         Spacer(Modifier.height(16.dp))
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Try asking me:", style = MaterialTheme.typography.labelLarge, color = c.inkSoft)
+        Spacer(Modifier.height(8.dp))
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             ideas.forEach { AssistChip(onClick = { onPick(it) }, label = { Text(it) }, shape = CircleShape, colors = AssistChipDefaults.assistChipColors(containerColor = c.cobaltSoft, labelColor = c.cobalt), border = null) }
         }
     }
