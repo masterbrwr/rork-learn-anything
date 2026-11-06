@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -76,9 +77,19 @@ fun LACard(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val base = modifier
+        .shadow(
+            elevation = if (LA.colors.isDark) 3.dp else 7.dp,
+            shape = shape,
+            ambientColor = Color(0xFF173A25).copy(alpha = if (LA.colors.isDark) 0.18f else 0.09f),
+            spotColor = Color(0xFF173A25).copy(alpha = if (LA.colors.isDark) 0.22f else 0.12f),
+        )
         .clip(shape)
-        .background(color)
-        .border(BorderStroke(1.dp, borderColor), shape)
+        .background(
+            brush = Brush.verticalGradient(
+                colors = listOf(color, color.copy(alpha = 0.985f)),
+            ),
+        )
+        .border(BorderStroke(1.dp, borderColor.copy(alpha = 0.9f)), shape)
     Column(
         modifier = (if (onClick != null) base.pressable(onClick) else base).padding(padding),
         content = content,
