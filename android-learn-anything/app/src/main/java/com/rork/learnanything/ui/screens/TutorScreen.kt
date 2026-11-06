@@ -98,22 +98,48 @@ fun TutorScreen(nav: NavController) {
         scope.launch {
             val tutorState = AppStore.state.value
             val queryTerms = t.lowercase().split(Regex("[^a-z0-9]+")).filter { it.length > 2 }.toSet()
-            val relevantNotes = tutorState.notes
+            val activeCourse = tutorState.courses.firstOrNull { it.id == tutorState.activeCourseId }
+            val rankedNotes = tutorState.notes
                 .map { note ->
                     val searchable = "${note.title} ${note.subject} ${note.body}".lowercase()
                     val score = queryTerms.count { term -> searchable.contains(term) }
                     note to score
                 }
-                .filter { it.second > 0 }
                 .sortedWith(compareByDescending<Pair<com.rork.learnanything.data.Note, Int>> { it.second }.thenByDescending { it.first.updatedAt })
-                .take(4)
+            // Prefer notes that match the learner's question. If none match, include
+            // recent notes from the active course rather than silently sending no context.
+            val matchingNotes = rankedNotes.filter { it.second > 0 }.take(4)
+            val fallbackNotes = if (matchingNotes.isEmpty() && activeCourse != null) {
+                rankedNotes.filter { it.first.subject.equals(activeCourse.subject, ignoreCase = true) }.take(2)
+            } else emptyList()
+            val selectedNotes = (matchingNotes + fallbackNotes).distinctBy { it.first.id }
             val courseContext = buildString {
-                appendLine("COURSE MATERIALS (use these as the primary source when relevant; say when the notes do not contain the answer):")
-                relevantNotes.forEach { (note, _) ->
-                    appendLine("\n[${note.subject} — ${note.title}]")
-                    appendLine(note.body.take(2400))
+                appendLine("LEARNER'S ACTIVE COURSE (context only; do not pretend it contains facts it does not):")
+                activeCourse?.let { course ->
+                    appendLine("Course: ${course.title}")
+                    appendLine("Subject: ${course.subject}")
+                    appendLine("Goal: ${course.goal}")
+                    appendLine("Overview: ${course.overview}")
+                    if (course.objectives.isNotEmpty()) appendLine("Objectives: ${course.objectives.joinToString("; ")}")
+                    course.currentLesson?.let { lesson ->
+                        appendLine("Current lesson: ${lesson.title}")
+                        lesson.content?.let { content ->
+                            appendLine("Lesson summary: ${content.summary}")
+                            content.keyPoints.take(8).forEach { appendLine("Key point: $it") }
+                            content.steps.take(8).forEach { step ->
+                                appendLine("${step.title}: ${step.body}")
+                            }
+                        }
+                    }
                 }
-            }.take(9000).takeIf { relevantNotes.isNotEmpty() }.orEmpty()
+                if (selectedNotes.isNotEmpty()) {
+                    appendLine("\nSAVED COURSE MATERIALS (use as primary sources when relevant; say when they do not contain the answer):")
+                    selectedNotes.forEach { (note, _) ->
+                        appendLine("\n[${note.subject} — ${note.title}]")
+                        appendLine(note.body.take(2200))
+                    }
+                }
+            }.take(9000).takeIf { activeCourse != null || selectedNotes.isNotEmpty() }.orEmpty()
             runCatching { Ai.tutor(tutorState.chat, mode, AppStore.learnerContext(), courseContext) }
                 .onSuccess { r ->
                     AppStore.consumeTutor()
