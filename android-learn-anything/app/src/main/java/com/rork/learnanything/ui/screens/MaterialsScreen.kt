@@ -245,14 +245,22 @@ fun MaterialsScreen(nav: NavController) {
                 scope.launch {
                     try {
                         val subject = title.ifBlank { "Course material" }
-                        val notes = Ai.notesAction("summarize", source)
+                        val notes = Ai.notesAction("summarize", source).trim()
+                        if (notes.isBlank()) error("The AI returned empty notes. Your original material is still here; try again.")
                         AppStore.saveNote(Note(id = com.rork.learnanything.data.newId(), title = "$subject · Study kit", body = "$notes\n\n--- Original course material ---\n$source", subject = subject))
                         var cardMessage = ""
                         if (makeCards) {
                             val payload = Ai.flashcards(source, 12)
-                            if (payload.cards.isNotEmpty()) {
-                                AppStore.addDeck(payload.deckName.ifBlank { "$subject · Flashcards" }, subject, payload.cards.map { it.front to it.back })
-                                cardMessage = " Flashcards saved."
+                            val validCards = payload.cards
+                                .map { it.front.trim() to it.back.trim() }
+                                .filter { it.first.isNotBlank() && it.second.isNotBlank() }
+                                .distinctBy { it.first.lowercase() }
+                                .take(20)
+                            if (validCards.isNotEmpty()) {
+                                AppStore.addDeck(payload.deckName.ifBlank { "$subject · Flashcards" }, subject, validCards)
+                                cardMessage = " ${validCards.size} flashcards saved."
+                            } else {
+                                cardMessage = " Notes saved, but flashcards couldn't be created this time."
                             }
                         }
                         status = "Study notes saved.$cardMessage Open Study to review your tools."
