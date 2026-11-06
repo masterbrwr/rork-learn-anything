@@ -64,7 +64,12 @@ Deno.serve(async (req) => {
       headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
     });
     const data = await paypal.json();
-    if (!paypal.ok) return response({ active: record.status === "ACTIVE", status: record.status });
+    if (!paypal.ok) {
+      // Fail closed when PayPal cannot confirm the live subscription state.
+      // Never grant Premium based only on a potentially stale database status.
+      console.error("PayPal subscription lookup failed", paypal.status);
+      return response({ active: false, status: "UNKNOWN", verification_pending: true }, 503);
+    }
 
     const status = typeof data.status === "string" ? data.status : record.status;
     const active = status === "ACTIVE" || status === "APPROVAL_PENDING";
