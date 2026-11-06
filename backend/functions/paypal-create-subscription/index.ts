@@ -62,6 +62,29 @@ Deno.serve(async (req) => {
       return response({ error: "PayPal billing is not configured yet." }, 503);
     }
 
+    // Prevent duplicate active or pending subscriptions for the same learner.
+    // The user_id primary key is not enough: an upsert would otherwise overwrite
+    // the old PayPal ID and leave a second recurring subscription running.
+    const existingResponse = await fetch(
+      `${supabaseUrl}/rest/v1/billing_subscriptions?user_id=eq.${encodeURIComponent(user.id)}&select=paypal_subscription_id,status&limit=1`,
+      { headers: { apikey: serviceRole, Authorization: `Bearer ${serviceRole}` } },
+    );
+    if (!existingResponse.ok) {
+      console.error("Unable to check existing subscription", existingResponse.status);
+      return response({ error: "We couldn't verify your current subscription. Please try again later." }, 502);
+    }
+    const existingRows = await existingResponse.json();
+    if (Array.isArray(existingRows) && existingRows.length > 0) {
+      const existing = existingRows[0];
+      const existingStatus = String(existing.status || "").toUpperCase();
+      if (["ACTIVE", "APPROVAL_PENDING", "APPROVED", "SUSPENDED"].includes(existingStatus)) {
+        return response({
+          error: "A subscription is already linked to this account. Check Premium status or manage the existing subscription before starting another.",
+          status: existingStatus,
+        }, 409);
+      }
+    }
+
     const accessToken = await paypalAccessToken(baseUrl, clientId, secret);
     const appUrl = Deno.env.get("PAYPAL_RETURN_URL")?.trim() || "https://learnanything.app/paypal-return";
     const cancelUrl = Deno.env.get("PAYPAL_CANCEL_URL")?.trim() || "https://learnanything.app/paypal-cancel";
