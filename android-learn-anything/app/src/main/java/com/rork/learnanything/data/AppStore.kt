@@ -2,6 +2,7 @@ package com.rork.learnanything.data
 
 import android.content.Context
 import android.util.Log
+import android.util.AtomicFile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
@@ -91,12 +92,18 @@ object AppStore {
     }
 
     private fun persist(s: AppState) {
-        runCatching {
-            val f = file ?: return
-            val tmp = File(f.parentFile, f.name + ".tmp")
-            tmp.writeText(json.encodeToString(AppState.serializer(), s))
-            tmp.renameTo(f)
-        }.onFailure { Log.e("AppStore", "Failed to persist state", it) }
+        val target = file ?: return
+        val atomic = AtomicFile(target)
+        var output: java.io.FileOutputStream? = null
+        try {
+            output = atomic.startWrite()
+            output.write(json.encodeToString(AppState.serializer(), s).toByteArray(Charsets.UTF_8))
+            output.fd.sync()
+            atomic.finishWrite(output)
+        } catch (t: Throwable) {
+            output?.let { atomic.failWrite(it) }
+            Log.e("AppStore", "Failed to persist state", t)
+        }
     }
 
     fun update(block: (AppState) -> AppState) {
