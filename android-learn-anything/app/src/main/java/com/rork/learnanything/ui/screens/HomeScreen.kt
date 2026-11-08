@@ -124,7 +124,23 @@ fun HomeScreen(nav: NavController) {
             }
             Avatar(name, Modifier.pressable({ nav.navigate(Routes.PROFILE) { launchSingleTop = true } }, label = "Open profile"))
         }
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(24.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Overline("YOUR PERSONAL LEARNING SPACE", color = c.cobalt)
+                Spacer(Modifier.height(5.dp))
+                Text("Grow your knowledge.", style = MaterialTheme.typography.headlineMedium, color = c.ink)
+                Text("A little progress, every day.", style = MaterialTheme.typography.bodyMedium, color = c.inkSoft)
+            }
+            Box(
+                Modifier.size(56.dp).clip(RoundedCornerShape(19.dp))
+                    .background(c.surfaceAlt),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(Icons.Rounded.Eco, null, tint = c.cobalt, modifier = Modifier.size(30.dp))
+            }
+        }
+        Spacer(Modifier.height(22.dp))
 
         // Universal ask bar
         LACard(Modifier.fillMaxWidth(), padding = PaddingValues(0.dp)) {
@@ -167,6 +183,35 @@ fun HomeScreen(nav: NavController) {
         // Continue hero
         HeroCard(nav)
         Spacer(Modifier.height(16.dp))
+
+        SectionHeader("Your learning studio", action = "See all", onAction = { nav.navigate(Routes.STUDY) })
+        Spacer(Modifier.height(8.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            LACard(
+                Modifier.weight(1f),
+                onClick = { nav.navigate(Routes.MATERIALS) },
+                color = c.surfaceAlt,
+                borderColor = c.surfaceAlt,
+                padding = PaddingValues(16.dp),
+            ) {
+                Icon(Icons.Rounded.FolderOpen, null, tint = c.cobalt, modifier = Modifier.size(26.dp))
+                Spacer(Modifier.height(16.dp))
+                Text("My materials", style = MaterialTheme.typography.titleMedium, color = c.ink)
+                Text("Notes & uploads", style = MaterialTheme.typography.bodySmall, color = c.inkSoft)
+            }
+            LACard(
+                Modifier.weight(1f),
+                onClick = { nav.navigate(Routes.TUTOR) },
+                color = c.surface,
+                padding = PaddingValues(16.dp),
+            ) {
+                Icon(Icons.Rounded.AutoAwesome, null, tint = c.cobalt, modifier = Modifier.size(26.dp))
+                Spacer(Modifier.height(16.dp))
+                Text("Ask Pip", style = MaterialTheme.typography.titleMedium, color = c.ink)
+                Text("Your AI tutor", style = MaterialTheme.typography.bodySmall, color = c.inkSoft)
+            }
+        }
+        Spacer(Modifier.height(22.dp))
 
         DailyChallengeCard(nav)
         Spacer(Modifier.height(16.dp))
