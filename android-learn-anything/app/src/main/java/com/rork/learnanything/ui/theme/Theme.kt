@@ -63,13 +63,13 @@ data class LAColors(
 
 // Fresh mint and emerald visual language inspired by the reference: bright, airy, layered and high contrast.
 private val Light = LAColors(
-    canvas = Color(0xFFF2FAF5), surface = Color(0xFFFFFFFF), surfaceAlt = Color(0xFFE0F5E9), border = Color(0xFFD3E9DE),
-    ink = Color(0xFF16372A), inkSoft = Color(0xFF567669), inkFaint = Color(0xFF89A79A),
-    hero = Color(0xFF36BE84), onHero = Color(0xFFFFFFFF),
-    coral = Color(0xFFFFC857), coralSoft = Color(0xFFFFF3D7),
-    cobalt = Color(0xFF0D9B6A), cobaltSoft = Color(0xFFD8F5E6),
-    success = Color(0xFF159B6B), successSoft = Color(0xFFD9F5E7),
-    amber = Color(0xFFD8A63E), amberSoft = Color(0xFFFFF2D2),
+    canvas = Color(0xFFF1F3EB), surface = Color(0xFFFEFFF9), surfaceAlt = Color(0xFFE2E9DB), border = Color(0xFFD9E0D2),
+    ink = Color(0xFF222821), inkSoft = Color(0xFF69766B), inkFaint = Color(0xFF96A294),
+    hero = Color(0xFF389E70), onHero = Color(0xFFFFFFFF),
+    coral = Color(0xFF218E61), coralSoft = Color(0xFFDCEEE0),
+    cobalt = Color(0xFF2D855D), cobaltSoft = Color(0xFFE1F0E2),
+    success = Color(0xFF268A5A), successSoft = Color(0xFFDBEDDD),
+    amber = Color(0xFFAD8B49), amberSoft = Color(0xFFF4EDD8),
     isDark = false,
 )
 
