@@ -61,15 +61,15 @@ data class LAColors(
     val isDark: Boolean,
 )
 
-// Premium woodland palette: deep botanical greens, warm ivory surfaces, and restrained brass accents.
+// Fresh mint and emerald visual language inspired by the reference: bright, airy, layered and high contrast.
 private val Light = LAColors(
-    canvas = Color(0xFFF3F6F0), surface = Color(0xFFFFFEFA), surfaceAlt = Color(0xFFE7EDE3), border = Color(0xFFD4DED0),
-    ink = Color(0xFF17251B), inkSoft = Color(0xFF526457), inkFaint = Color(0xFF829187),
-    hero = Color(0xFF245C3A), onHero = Color(0xFFFFFFFF),
-    coral = Color(0xFFE7B94F), coralSoft = Color(0xFFFBF1D8),
-    cobalt = Color(0xFF245C3A), cobaltSoft = Color(0xFFE2EDE3),
-    success = Color(0xFF34764A), successSoft = Color(0xFFDDEBDD),
-    amber = Color(0xFFC89532), amberSoft = Color(0xFFF6EBD0),
+    canvas = Color(0xFFF1FAF5), surface = Color(0xFFFFFFFF), surfaceAlt = Color(0xFFDDF3E7), border = Color(0xFFCBE8D9),
+    ink = Color(0xFF173B2C), inkSoft = Color(0xFF5C796B), inkFaint = Color(0xFF8AA99A),
+    hero = Color(0xFF43C68D), onHero = Color(0xFFFFFFFF),
+    coral = Color(0xFFFFC857), coralSoft = Color(0xFFFFF3D7),
+    cobalt = Color(0xFF15966B), cobaltSoft = Color(0xFFDDF5E9),
+    success = Color(0xFF20A976), successSoft = Color(0xFFD9F5E7),
+    amber = Color(0xFFD8A63E), amberSoft = Color(0xFFFFF2D2),
     isDark = false,
 )
 
