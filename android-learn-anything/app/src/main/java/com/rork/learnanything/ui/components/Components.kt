@@ -72,16 +72,16 @@ fun LACard(
     onClick: (() -> Unit)? = null,
     color: Color = LA.colors.surface,
     borderColor: Color = LA.colors.border,
-    shape: RoundedCornerShape = RoundedCornerShape(20.dp),
+    shape: RoundedCornerShape = RoundedCornerShape(24.dp),
     padding: PaddingValues = PaddingValues(18.dp),
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val base = modifier
         .shadow(
-            elevation = if (LA.colors.isDark) 3.dp else 7.dp,
+            elevation = if (LA.colors.isDark) 3.dp else 10.dp,
             shape = shape,
-            ambientColor = Color(0xFF173A25).copy(alpha = if (LA.colors.isDark) 0.18f else 0.09f),
-            spotColor = Color(0xFF173A25).copy(alpha = if (LA.colors.isDark) 0.22f else 0.12f),
+            ambientColor = Color(0xFF146746).copy(alpha = if (LA.colors.isDark) 0.18f else 0.075f),
+            spotColor = Color(0xFF146746).copy(alpha = if (LA.colors.isDark) 0.22f else 0.10f),
         )
         .clip(shape)
         .background(
