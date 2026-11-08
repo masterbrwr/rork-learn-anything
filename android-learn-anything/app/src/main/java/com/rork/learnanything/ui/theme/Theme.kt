@@ -63,12 +63,12 @@ data class LAColors(
 
 // Fresh mint and emerald visual language inspired by the reference: bright, airy, layered and high contrast.
 private val Light = LAColors(
-    canvas = Color(0xFFF1FAF5), surface = Color(0xFFFFFFFF), surfaceAlt = Color(0xFFDDF3E7), border = Color(0xFFCBE8D9),
-    ink = Color(0xFF173B2C), inkSoft = Color(0xFF5C796B), inkFaint = Color(0xFF8AA99A),
-    hero = Color(0xFF43C68D), onHero = Color(0xFFFFFFFF),
+    canvas = Color(0xFFF2FAF5), surface = Color(0xFFFFFFFF), surfaceAlt = Color(0xFFE0F5E9), border = Color(0xFFD3E9DE),
+    ink = Color(0xFF16372A), inkSoft = Color(0xFF567669), inkFaint = Color(0xFF89A79A),
+    hero = Color(0xFF36BE84), onHero = Color(0xFFFFFFFF),
     coral = Color(0xFFFFC857), coralSoft = Color(0xFFFFF3D7),
-    cobalt = Color(0xFF15966B), cobaltSoft = Color(0xFFDDF5E9),
-    success = Color(0xFF20A976), successSoft = Color(0xFFD9F5E7),
+    cobalt = Color(0xFF0D9B6A), cobaltSoft = Color(0xFFD8F5E6),
+    success = Color(0xFF159B6B), successSoft = Color(0xFFD9F5E7),
     amber = Color(0xFFD8A63E), amberSoft = Color(0xFFFFF2D2),
     isDark = false,
 )
@@ -120,11 +120,11 @@ val Tabular = TextStyle(fontFeatureSettings = "tnum")
 private fun typography(): Typography {
     val base = Typography()
     return base.copy(
-        displaySmall = TextStyle(fontFamily = Serif, fontWeight = FontWeight.SemiBold, fontSize = 34.sp, lineHeight = 40.sp, letterSpacing = (-0.5).sp),
-        headlineLarge = TextStyle(fontFamily = Serif, fontWeight = FontWeight.SemiBold, fontSize = 30.sp, lineHeight = 36.sp, letterSpacing = (-0.4).sp),
-        headlineMedium = TextStyle(fontFamily = Serif, fontWeight = FontWeight.SemiBold, fontSize = 26.sp, lineHeight = 32.sp, letterSpacing = (-0.3).sp),
-        headlineSmall = TextStyle(fontFamily = Serif, fontWeight = FontWeight.SemiBold, fontSize = 22.sp, lineHeight = 28.sp, letterSpacing = (-0.2).sp),
-        titleLarge = TextStyle(fontFamily = Serif, fontWeight = FontWeight.SemiBold, fontSize = 20.sp, lineHeight = 26.sp),
+        displaySmall = TextStyle( fontWeight = FontWeight.SemiBold, fontSize = 34.sp, lineHeight = 40.sp, letterSpacing = (-0.5).sp),
+        headlineLarge = TextStyle( fontWeight = FontWeight.SemiBold, fontSize = 30.sp, lineHeight = 36.sp, letterSpacing = (-0.4).sp),
+        headlineMedium = TextStyle( fontWeight = FontWeight.SemiBold, fontSize = 26.sp, lineHeight = 32.sp, letterSpacing = (-0.3).sp),
+        headlineSmall = TextStyle( fontWeight = FontWeight.SemiBold, fontSize = 22.sp, lineHeight = 28.sp, letterSpacing = (-0.2).sp),
+        titleLarge = TextStyle( fontWeight = FontWeight.SemiBold, fontSize = 20.sp, lineHeight = 26.sp),
         titleMedium = base.titleMedium.copy(fontWeight = FontWeight.SemiBold, fontSize = 16.sp),
         bodyLarge = base.bodyLarge.copy(fontSize = 16.sp, lineHeight = 24.sp),
         bodyMedium = base.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp),
