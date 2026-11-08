@@ -68,6 +68,12 @@ fun GoalIntakeScreen(nav: NavController, initialGoal: String) {
 
     fun build() {
         if (goal.isBlank()) return
+        // AI course generation is authenticated by the Supabase Edge Function.
+        // Route learners to sign-in before showing a misleading generic load error.
+        if (Auth.session.value == null) {
+            nav.navigate(Routes.auth(next = Routes.intake(goal.trim())))
+            return
+        }
         errorDetail = null
         phase = "loading"
         AppStore.track("path_requested", mapOf("goal" to goal))
@@ -85,6 +91,11 @@ fun GoalIntakeScreen(nav: NavController, initialGoal: String) {
                 }
                 .onFailure { e ->
                     AppStore.logError("generateCourse", e)
+                    if (e is AuthException || e.message.orEmpty().contains("sign in", ignoreCase = true) || e.message.orEmpty().contains("session expired", ignoreCase = true)) {
+                        phase = "form"
+                        nav.navigate(Routes.auth(next = Routes.intake(goal.trim())))
+                        return@onFailure
+                    }
                     errorDetail = when {
                         e.message.orEmpty().contains("setup", true) || e.message.orEmpty().contains("configuration", true) || e.message.orEmpty().contains("backend", true) ->
                             "The AI service is not connected yet. The app's Supabase URL and public key are blank in its configuration, so course generation cannot start until the owner connects the backend."
