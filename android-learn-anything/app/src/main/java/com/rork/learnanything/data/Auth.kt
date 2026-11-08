@@ -131,7 +131,7 @@ object Auth {
         raw.contains("already registered", true) || raw.contains("already exists", true) -> "An account with this email already exists. Try signing in."
         raw.contains("Password should be", true) -> "Use a password with at least 8 characters."
         raw.contains("Token has expired", true) || raw.contains("invalid", true) && raw.contains("otp", true) -> "That code is wrong or expired. Request a new one."
-        raw.contains("provider is not enabled", true) -> "This sign-in method isn't switched on yet."
+        raw.contains("unsupported provider", true) || raw.contains("provider is not enabled", true) -> "Google sign-in is not enabled in the Learn Anything authentication project yet. The app is reaching Supabase correctly, but the Google provider must be enabled in Supabase Auth and connected to Google OAuth credentials before sign-in can work."
         raw.contains("sms", true) && raw.contains("provider", true) -> "Text messages can't be sent yet. Try email or Google."
         raw.contains("rate limit", true) -> "Too many attempts. Wait a minute and try again."
         else -> raw
