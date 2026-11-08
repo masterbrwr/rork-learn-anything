@@ -30,6 +30,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
@@ -219,24 +221,34 @@ private fun HeroCard(nav: NavController) {
     val s by AppStore.state.collectAsStateWithLifecycle()
     val c = LA.colors
     val course = s.courses.firstOrNull { it.id == s.activeCourseId } ?: s.courses.firstOrNull()
-    val shape = RoundedCornerShape(20.dp)
-    Box(Modifier.fillMaxWidth().clip(shape).background(c.hero).padding(20.dp)) {
+    val shape = RoundedCornerShape(28.dp)
+    Box(
+        Modifier.fillMaxWidth()
+            .shadow(14.dp, shape, ambientColor = Color(0xFF116E50).copy(alpha = 0.16f))
+            .clip(shape)
+            .background(
+                Brush.linearGradient(
+                    listOf(Color(0xFF1B9D72), Color(0xFF3CC38B), Color(0xFF8BDEC1))
+                )
+            )
+            .padding(24.dp)
+    ) {
         // A quiet woodland canopy motif adds depth without competing with lesson content.
         Canvas(Modifier.matchParentSize()) {
             val w = size.width
             val h = size.height
-            val canopy = Color(0xFF8FAE67)
-            val sunlight = Color(0xFFE6B95E)
+            val canopy = Color(0xFFD7FFE7)
+            val sunlight = Color(0xFFFFF4C8)
             drawCircle(sunlight.copy(alpha = 0.20f), radius = w * 0.16f, center = androidx.compose.ui.geometry.Offset(w * 0.88f, h * 0.10f))
-            drawLine(Color(0xFFB98B5D).copy(alpha = 0.35f), androidx.compose.ui.geometry.Offset(w * 0.78f, 0f), androidx.compose.ui.geometry.Offset(w * 0.56f, h * 0.68f), strokeWidth = 7f)
-            drawLine(Color(0xFFB98B5D).copy(alpha = 0.28f), androidx.compose.ui.geometry.Offset(w * 0.67f, h * 0.27f), androidx.compose.ui.geometry.Offset(w * 0.92f, h * 0.42f), strokeWidth = 4f)
+            drawLine(Color(0xFFDAFFE8).copy(alpha = 0.24f), androidx.compose.ui.geometry.Offset(w * 0.78f, 0f), androidx.compose.ui.geometry.Offset(w * 0.56f, h * 0.68f), strokeWidth = 7f)
+            drawLine(Color(0xFFDAFFE8).copy(alpha = 0.22f), androidx.compose.ui.geometry.Offset(w * 0.67f, h * 0.27f), androidx.compose.ui.geometry.Offset(w * 0.92f, h * 0.42f), strokeWidth = 4f)
             listOf(
                 Triple(0.76f, 0.12f, 0.10f), Triple(0.91f, 0.25f, 0.12f),
                 Triple(0.67f, 0.34f, 0.08f), Triple(0.94f, 0.53f, 0.09f),
                 Triple(0.80f, 0.68f, 0.07f), Triple(0.59f, 0.16f, 0.06f),
             ).forEachIndexed { index, leaf ->
                 drawCircle(
-                    (if (index % 2 == 0) canopy else Color(0xFFD5A85A)).copy(alpha = 0.18f),
+                    (if (index % 2 == 0) canopy else Color(0xFFB8F5D5)).copy(alpha = 0.18f),
                     radius = w * leaf.third,
                     center = androidx.compose.ui.geometry.Offset(w * leaf.first, h * leaf.second),
                 )
@@ -244,6 +256,8 @@ private fun HeroCard(nav: NavController) {
         }
         if (course == null || course.isComplete) {
             Column {
+                Overline("YOUR LEARNING GARDEN", color = c.onHero.copy(alpha = 0.85f))
+                Spacer(Modifier.height(12.dp))
                 Text(if (course == null) "Start something new" else "You finished ${course.title}", style = MaterialTheme.typography.headlineMedium, color = c.onHero)
                 Spacer(Modifier.height(6.dp))
                 Text("Turn a goal into a focused roadmap with daily wins, practice, and proof you can use the skill.", color = c.onHero.copy(alpha = 0.75f), style = MaterialTheme.typography.bodyMedium)
@@ -255,6 +269,8 @@ private fun HeroCard(nav: NavController) {
             val ws = worldStyle(course.world)
             Row {
                 Column(Modifier.weight(1.1f)) {
+                    Overline("PICK UP WHERE YOU LEFT OFF", color = c.onHero.copy(alpha = 0.82f))
+                    Spacer(Modifier.height(10.dp))
                     Text("Continue ${course.subject}", style = MaterialTheme.typography.headlineMedium, color = c.onHero, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     Spacer(Modifier.height(4.dp))
                     Text("${lesson.title} · ${(course.progress * 100).roundToInt()}%", color = c.onHero.copy(alpha = 0.8f), style = MaterialTheme.typography.bodyLarge, maxLines = 2)
