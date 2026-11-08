@@ -104,10 +104,10 @@ fun AppNavigation() {
             contentWindowInsets = WindowInsets(0),
             bottomBar = {
                 AnimatedVisibility(showBar, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
-                    Column(Modifier.background(c.canvas).padding(horizontal = 14.dp, vertical = 8.dp)) {
+                    Column(Modifier.background(c.canvas).padding(horizontal = 18.dp, vertical = 12.dp)) {
                         NavigationBar(
-                            modifier = Modifier.shadow(12.dp, RoundedCornerShape(28.dp), ambientColor = Color(0xFF233428).copy(alpha = 0.12f)).clip(RoundedCornerShape(28.dp)),
-                            containerColor = Color(0xFF222B25),
+                            modifier = Modifier.shadow(18.dp, RoundedCornerShape(30.dp), ambientColor = Color(0xFF172C20).copy(alpha = 0.22f), spotColor = Color(0xFF172C20).copy(alpha = 0.18f)).clip(RoundedCornerShape(30.dp)),
+                            containerColor = Color(0xFF1E2621),
                             tonalElevation = 0.dp,
                             windowInsets = WindowInsets(0)
                         ) {
@@ -138,7 +138,7 @@ fun AppNavigation() {
                                     colors = NavigationBarItemDefaults.colors(
                                         selectedIconColor = Color(0xFF1F6545),
                                         selectedTextColor = Color(0xFFB5F0C7),
-                                        indicatorColor = Color(0xFFDCEEDB),
+                                        indicatorColor = Color(0xFFCBF1D7),
                                         unselectedIconColor = Color(0xFFE0EAE0),
                                         unselectedTextColor = Color(0xFFD1DCD1),
                                     ),
