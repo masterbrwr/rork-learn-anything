@@ -7,6 +7,9 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.automirrored.rounded.MenuBook
@@ -101,9 +104,13 @@ fun AppNavigation() {
             contentWindowInsets = WindowInsets(0),
             bottomBar = {
                 AnimatedVisibility(showBar, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
-                    Column {
-                        HorizontalDivider(color = c.border)
-                        NavigationBar(containerColor = c.surface, tonalElevation = 0.dp, windowInsets = WindowInsets(0)) {
+                    Column(Modifier.background(c.canvas).padding(horizontal = 14.dp, vertical = 8.dp)) {
+                        NavigationBar(
+                            modifier = Modifier.shadow(12.dp, RoundedCornerShape(28.dp), ambientColor = Color(0xFF233428).copy(alpha = 0.12f)).clip(RoundedCornerShape(28.dp)),
+                            containerColor = Color(0xFF222B25),
+                            tonalElevation = 0.dp,
+                            windowInsets = WindowInsets(0)
+                        ) {
                             tabs.forEach { t ->
                                 val selected = entry?.destination?.hierarchy?.any { it.route == t.route } == true
                                 NavigationBarItem(
@@ -118,10 +125,10 @@ fun AppNavigation() {
                                     icon = {
                                         if (t.route == Routes.TUTOR) {
                                             Box(
-                                                Modifier.size(32.dp).clip(CircleShape).background(if (selected) c.coralSoft else c.surfaceAlt),
+                                                Modifier.size(32.dp).clip(CircleShape).background(if (selected) Color(0xFFDCEEDB) else Color(0xFF344239)),
                                                 contentAlignment = Alignment.Center,
                                             ) {
-                                                Icon(Icons.Rounded.AutoAwesome, null, tint = if (selected) c.coral else c.inkSoft, modifier = Modifier.size(18.dp))
+                                                Icon(Icons.Rounded.AutoAwesome, null, tint = if (selected) Color(0xFF236A49) else Color(0xFFE7F0E7), modifier = Modifier.size(18.dp))
                                             }
                                         } else {
                                             Icon(if (selected) t.selectedIcon ?: t.icon else t.icon, null)
@@ -129,11 +136,11 @@ fun AppNavigation() {
                                     },
                                     label = { Text(t.label) },
                                     colors = NavigationBarItemDefaults.colors(
-                                        selectedIconColor = c.coral,
-                                        selectedTextColor = c.coral,
-                                        indicatorColor = c.coralSoft,
-                                        unselectedIconColor = c.inkSoft,
-                                        unselectedTextColor = c.inkSoft,
+                                        selectedIconColor = Color(0xFF1F6545),
+                                        selectedTextColor = Color(0xFFB5F0C7),
+                                        indicatorColor = Color(0xFFDCEEDB),
+                                        unselectedIconColor = Color(0xFFE0EAE0),
+                                        unselectedTextColor = Color(0xFFD1DCD1),
                                     ),
                                 )
                             }
