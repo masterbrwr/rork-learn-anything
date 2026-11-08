@@ -141,17 +141,18 @@ fun AuthScreen(nav: NavController, fromOnboarding: Boolean, next: String = "") {
                         Spacer(Modifier.height(8.dp))
                         Text("Your paths, streaks, notes and flashcards are backed up and follow you to any phone.", style = MaterialTheme.typography.bodyLarge, color = c.inkSoft)
                         Spacer(Modifier.height(28.dp))
-                        // Free sign-in only: email always; Google appears once its (free) OAuth keys are configured.
-                        // Phone/SMS is intentionally not offered because texting codes costs money per message.
+                        ProviderButton("Continue with Google", leading = { GoogleMark() }, onClick = {
+                            error = null
+                            runCatching { busy = true; Auth.startOAuth(ctx, "google") }
+                                .onFailure { busy = false; error = it.message ?: "Google sign-in couldn't start." }
+                        }, enabled = !busy)
+                        Spacer(Modifier.height(10.dp))
+                        ProviderButton("Continue with phone number", leading = { Icon(Icons.Rounded.PhoneIphone, null, tint = c.ink) }, onClick = {
+                            error = null
+                            step = AuthStep.Phone
+                        }, enabled = !busy)
+                        Spacer(Modifier.height(10.dp))
                         ProviderButton("Continue with email", leading = { Icon(Icons.Rounded.Email, null, tint = c.ink) }, onClick = { error = null; creating = true; step = AuthStep.Email }, enabled = !busy)
-                        if ("google" in providers) {
-                            Spacer(Modifier.height(10.dp))
-                            ProviderButton(
-                                label = "Continue with Google", leading = { GoogleMark() },
-                                onClick = { runCatching { busy = true; Auth.startOAuth(ctx, "google") }.onFailure { busy = false; error = it.message } },
-                                enabled = !busy,
-                            )
-                        }
                         Spacer(Modifier.height(10.dp))
                         ProviderButton("I already have an account", leading = { Icon(Icons.Rounded.Person, null, tint = c.ink) }, onClick = { error = null; creating = false; step = AuthStep.Email }, enabled = !busy)
                     }
